@@ -28,7 +28,7 @@ This app is meant to be used as a starting point to build a conversational assis
 2. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/openai/responses-starter-app.git
+   git clone https://github.com/openai/openai-responses-starter-app.git
    ```
 
 3. **Install dependencies:**
