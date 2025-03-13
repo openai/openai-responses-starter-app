@@ -20,16 +20,21 @@ This app is meant to be used as a starting point to build a conversational assis
 
 ## How to use
 
-1. **Set Up the OpenAI API:**
-
-   - If you're new to the OpenAI API, [sign up for an account](https://platform.openai.com/signup).
-   - Follow the [Quickstart](https://platform.openai.com/docs/quickstart) to retrieve your API key.
-
-2. **Clone the Repository:**
+1. **Clone the Repository:**
 
    ```bash
    git clone https://github.com/openai/openai-responses-starter-app.git
    ```
+
+2. **Set Up the OpenAI API key:**
+
+   - If you're new to the OpenAI API, [sign up for an account](https://platform.openai.com/signup).
+   - Follow the [Quickstart](https://platform.openai.com/docs/quickstart) to retrieve your API key.
+   - Run in the project root:
+      ```bash
+      cp .env.example .env
+      ```
+      and set your API key in there.
 
 3. **Install dependencies:**
 
