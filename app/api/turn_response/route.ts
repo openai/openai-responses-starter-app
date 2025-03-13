@@ -1,13 +1,11 @@
 import { MODEL } from "@/config/constants";
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
+import openai from "@/app/openai";
 
 export async function POST(request: Request) {
   try {
     const { messages, tools } = await request.json();
     console.log("Received messages:", messages);
-
-    const openai = new OpenAI();
 
     const events = await openai.responses.create({
       model: MODEL,

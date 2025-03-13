@@ -1,6 +1,4 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI();
+import openai from "@/app/openai";
 
 export async function POST(request: Request) {
   const { vectorStoreId, fileId } = await request.json();
