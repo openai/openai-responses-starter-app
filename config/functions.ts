@@ -19,7 +19,7 @@ export const get_weather = async ({
 };
 
 export const get_joke = async () => {
-  const res = await fetch(`/api/functions/get_joke`).then((res) => res.json());
+  const res = await fetch("/api/functions/get_joke").then((res) => res.json());
   return res;
 };
 

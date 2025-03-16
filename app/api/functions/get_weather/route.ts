@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     // 3. Get current UTC time in ISO format
     const now = new Date();
-    const currentHourISO = now.toISOString().slice(0, 13) + ":00";
+    const currentHourISO = `${now.toISOString().slice(0, 13)}:00`;
 
     // 4. Get current temperature
     const index = weather.hourly.time.indexOf(currentHourISO);

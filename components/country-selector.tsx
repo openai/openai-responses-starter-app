@@ -279,12 +279,7 @@ export default function CountrySelector({
     <div className="flex-1">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between text-muted-foreground"
-          >
+          <Button variant="outline" aria-expanded={open} className="w-full justify-between text-muted-foreground">
             {value ? countries.find((country) => country.value === value)?.label : "Select country..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

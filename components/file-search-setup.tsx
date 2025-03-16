@@ -73,12 +73,13 @@ export default function FileSearchSetup() {
                   }
                 }}
               />
-              <div
+              <button
+                type="button"
                 className="text-zinc-400 text-sm px-1 transition-colors hover:text-zinc-600 cursor-pointer"
                 onClick={() => handleAddStore(newStoreId)}
               >
                 Add
-              </div>
+              </button>
             </div>
           )}
         </div>

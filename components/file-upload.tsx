@@ -224,7 +224,7 @@ export default function FileUpload({ vectorStoreId, onAddStore, onUnlinkStore }:
                     className={`absolute rounded-full transition-all duration-300 ${
                       isDragActive ? "h-56 w-56 bg-zinc-100" : "h-0 w-0 bg-transparent"
                     }`}
-                  ></div>
+                  />
                   <div className="flex flex-col items-center text-center z-10 cursor-pointer">
                     <FilePlus2 className="mb-4 size-8 text-zinc-700" />
                     <div className="text-zinc-700">Upload a file</div>

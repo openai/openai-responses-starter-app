@@ -27,8 +27,9 @@ const Chat: React.FC<ChatProps> = ({ items, onSendMessage }) => {
       onSendMessage(inputMessageText);
       setinputMessageText("");
     }
-  }, [onSendMessage, inputMessageText]);
+  }, [onSendMessage, inputMessageText, isComposing]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Will be fixed in a separate PR
   useEffect(() => {
     scrollToBottom();
   }, [items]);
@@ -45,7 +46,7 @@ const Chat: React.FC<ChatProps> = ({ items, onSendMessage }) => {
                 ) : item.type === "message" ? (
                   <div className="flex flex-col gap-1">
                     <Message message={item} />
-                    {item.content && item.content[0].annotations && item.content[0].annotations.length > 0 && (
+                    {item.content?.[0]?.annotations && item.content[0].annotations.length > 0 && (
                       <Annotations annotations={item.content[0].annotations} />
                     )}
                   </div>
@@ -76,6 +77,7 @@ const Chat: React.FC<ChatProps> = ({ items, onSendMessage }) => {
                     />
                   </div>
                   <button
+                    type="submit"
                     disabled={!inputMessageText}
                     data-testid="send-button"
                     className="flex size-8 items-end justify-center rounded-full bg-black text-white transition-colors hover:opacity-70 focus-visible:outline-none focus-visible:outline-black disabled:bg-[#D7D7D7] disabled:text-[#f4f4f4] disabled:hover:opacity-100"
@@ -92,6 +94,7 @@ const Chat: React.FC<ChatProps> = ({ items, onSendMessage }) => {
                       viewBox="0 0 32 32"
                       className="icon-2xl"
                     >
+                      <title>Send message</title>
                       <path
                         fill="currentColor"
                         fillRule="evenodd"

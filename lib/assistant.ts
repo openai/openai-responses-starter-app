@@ -52,8 +52,13 @@ export const handleTurn = async (messages: any[], tools: any[], onMessage: (data
       return;
     }
 
+    if (!response.body) {
+      console.error("Response body is null");
+      return;
+    }
+
     // Reader for streaming data
-    const reader = response.body!.getReader();
+    const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let done = false;
     let buffer = "";
@@ -81,7 +86,7 @@ export const handleTurn = async (messages: any[], tools: any[], onMessage: (data
     }
 
     // Handle any remaining data in buffer
-    if (buffer && buffer.startsWith("data: ")) {
+    if (buffer?.startsWith("data: ")) {
       const dataStr = buffer.slice(6);
       if (dataStr !== "[DONE]") {
         const data = JSON.parse(dataStr);
@@ -239,6 +244,7 @@ export const processMessages = async () => {
         }
         conversationItems.push(item);
         setConversationItems([...conversationItems]);
+        break;
       }
 
       case "response.function_call_arguments.delta": {
