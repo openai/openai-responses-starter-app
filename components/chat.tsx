@@ -1,10 +1,10 @@
 "use client";
 
+import type { Item } from "@/lib/assistant";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import ToolCall from "./tool-call";
-import Message from "./message";
 import Annotations from "./annotations";
-import { Item } from "@/lib/assistant";
+import Message from "./message";
+import ToolCall from "./tool-call";
 
 interface ChatProps {
   items: Item[];
@@ -45,13 +45,9 @@ const Chat: React.FC<ChatProps> = ({ items, onSendMessage }) => {
                 ) : item.type === "message" ? (
                   <div className="flex flex-col gap-1">
                     <Message message={item} />
-                    {item.content &&
-                      item.content[0].annotations &&
-                      item.content[0].annotations.length > 0 && (
-                        <Annotations
-                          annotations={item.content[0].annotations}
-                        />
-                      )}
+                    {item.content && item.content[0].annotations && item.content[0].annotations.length > 0 && (
+                      <Annotations annotations={item.content[0].annotations} />
+                    )}
                   </div>
                 ) : null}
               </React.Fragment>

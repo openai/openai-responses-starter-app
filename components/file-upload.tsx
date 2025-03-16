@@ -1,23 +1,11 @@
 "use client";
-import React, { useCallback, useState, FormEvent } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "./ui/button";
-import { FilePlus2, Plus, Trash2, CircleX } from "lucide-react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CircleX, FilePlus2, Plus, Trash2 } from "lucide-react";
+import React, { useCallback, useState, type FormEvent } from "react";
 import { useDropzone } from "react-dropzone";
+import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface FileUploadProps {
   vectorStoreId?: string;
@@ -26,11 +14,7 @@ interface FileUploadProps {
   onUnlinkStore: () => void;
 }
 
-export default function FileUpload({
-  vectorStoreId,
-  onAddStore,
-  onUnlinkStore,
-}: FileUploadProps) {
+export default function FileUpload({ vectorStoreId, onAddStore, onUnlinkStore }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [newStoreName, setNewStoreName] = useState<string>("Default store");
   const [uploading, setUploading] = useState<boolean>(false);
@@ -42,9 +26,7 @@ export default function FileUpload({
     "text/x-csharp": [".cs"],
     "text/css": [".css"],
     "application/msword": [".doc"],
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
-      ".docx",
-    ],
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
     "text/x-golang": [".go"],
     "text/html": [".html"],
     "text/x-java": [".java"],
@@ -53,8 +35,7 @@ export default function FileUpload({
     "text/markdown": [".md"],
     "application/pdf": [".pdf"],
     "text/x-php": [".php"],
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-      [".pptx"],
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
     "text/x-python": [".py"],
     "text/x-script.python": [".py"],
     "text/x-ruby": [".rb"],
@@ -189,9 +170,7 @@ export default function FileUpload({
               <div className="flex items-start gap-2 text-sm">
                 <label className="font-medium w-72" htmlFor="storeName">
                   New vector store name
-                  <div className="text-xs text-zinc-400">
-                    A new store will be created when you upload a file.
-                  </div>
+                  <div className="text-xs text-zinc-400">A new store will be created when you upload a file.</div>
                 </label>
                 <Input
                   id="storeName"
@@ -204,12 +183,8 @@ export default function FileUpload({
             ) : (
               <div className="flex items-center justify-between flex-1 min-w-0">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="text-sm font-medium w-24 text-nowrap">
-                    Vector store
-                  </div>
-                  <div className="text-zinc-400  text-xs font-mono flex-1 text-ellipsis truncate">
-                    {vectorStoreId}
-                  </div>
+                  <div className="text-sm font-medium w-24 text-nowrap">Vector store</div>
+                  <div className="text-zinc-400  text-xs font-mono flex-1 text-ellipsis truncate">{vectorStoreId}</div>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -235,11 +210,7 @@ export default function FileUpload({
                 <div className="flex items-center mt-2">
                   <div className="text-zinc-900 mr-2">{file.name}</div>
 
-                  <Trash2
-                    onClick={removeFile}
-                    size={16}
-                    className="cursor-pointer text-zinc-900"
-                  />
+                  <Trash2 onClick={removeFile} size={16} className="cursor-pointer text-zinc-900" />
                 </div>
               </div>
             ) : (
@@ -251,9 +222,7 @@ export default function FileUpload({
                   <input {...getInputProps()} />
                   <div
                     className={`absolute rounded-full transition-all duration-300 ${
-                      isDragActive
-                        ? "h-56 w-56 bg-zinc-100"
-                        : "h-0 w-0 bg-transparent"
+                      isDragActive ? "h-56 w-56 bg-zinc-100" : "h-0 w-0 bg-transparent"
                     }`}
                   ></div>
                   <div className="flex flex-col items-center text-center z-10 cursor-pointer">

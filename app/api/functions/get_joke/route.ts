@@ -7,10 +7,7 @@ export async function GET() {
     const jokeData = await jokeRes.json();
 
     // Format joke response based on its type
-    const joke =
-      jokeData.type === "twopart"
-        ? `${jokeData.setup} - ${jokeData.delivery}`
-        : jokeData.joke;
+    const joke = jokeData.type === "twopart" ? `${jokeData.setup} - ${jokeData.delivery}` : jokeData.joke;
 
     return new Response(JSON.stringify({ joke }), { status: 200 });
   } catch (error) {

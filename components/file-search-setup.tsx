@@ -1,9 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import useToolsStore from "@/stores/useToolsStore";
 import FileUpload from "@/components/file-upload";
-import { Input } from "./ui/input";
+import useToolsStore from "@/stores/useToolsStore";
 import { CircleX } from "lucide-react";
+import React, { useState } from "react";
+import { Input } from "./ui/input";
 import { TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { Tooltip } from "./ui/tooltip";
 import { TooltipProvider } from "./ui/tooltip";
@@ -21,9 +21,9 @@ export default function FileSearchSetup() {
 
   const handleAddStore = async (storeId: string) => {
     if (storeId.trim()) {
-      const newStore = await fetch(
-        `/api/vector_stores/retrieve_store?vector_store_id=${storeId}`
-      ).then((res) => res.json());
+      const newStore = await fetch(`/api/vector_stores/retrieve_store?vector_store_id=${storeId}`).then((res) =>
+        res.json(),
+      );
       if (newStore.id) {
         console.log("Retrieved store:", newStore);
         setVectorStore(newStore);
@@ -35,20 +35,14 @@ export default function FileSearchSetup() {
 
   return (
     <div>
-      <div className="text-sm text-zinc-500">
-        Upload a file to create a new vector store, or use an existing one.
-      </div>
+      <div className="text-sm text-zinc-500">Upload a file to create a new vector store, or use an existing one.</div>
       <div className="flex items-center gap-2 mt-2 h-10">
         <div className="flex items-center gap-2 w-full">
-          <div className="text-sm font-medium w-24 text-nowrap">
-            Vector store
-          </div>
+          <div className="text-sm font-medium w-24 text-nowrap">Vector store</div>
           {vectorStore?.id ? (
             <div className="flex items-center justify-between flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="text-zinc-400  text-xs font-mono flex-1 text-ellipsis truncate">
-                  {vectorStore.id}
-                </div>
+                <div className="text-zinc-400  text-xs font-mono flex-1 text-ellipsis truncate">{vectorStore.id}</div>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>

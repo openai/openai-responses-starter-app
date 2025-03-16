@@ -1,10 +1,10 @@
+import type { Annotation } from "@/components/annotations";
 import { DEVELOPER_PROMPT } from "@/config/constants";
-import { parse } from "partial-json";
+import type { functionsMap } from "@/config/functions";
 import { handleTool } from "@/lib/tools/tools-handling";
 import useConversationStore from "@/stores/useConversationStore";
+import { parse } from "partial-json";
 import { getTools } from "./tools/tools";
-import { Annotation } from "@/components/annotations";
-import { functionsMap } from "@/config/functions";
 
 export interface ContentItem {
   type: "input_text" | "output_text" | "refusal" | "output_audio";
@@ -35,11 +35,7 @@ export interface ToolCallItem {
 
 export type Item = MessageItem | ToolCallItem;
 
-export const handleTurn = async (
-  messages: any[],
-  tools: any[],
-  onMessage: (data: any) => void
-) => {
+export const handleTurn = async (messages: any[], tools: any[], onMessage: (data: any) => void) => {
   try {
     // Get response from the API (defined in app/api/turn_response/route.ts)
     const response = await fetch("/api/turn_response", {
@@ -98,12 +94,7 @@ export const handleTurn = async (
 };
 
 export const processMessages = async () => {
-  const {
-    chatMessages,
-    conversationItems,
-    setChatMessages,
-    setConversationItems,
-  } = useConversationStore.getState();
+  const { chatMessages, conversationItems, setChatMessages, setConversationItems } = useConversationStore.getState();
 
   const tools = getTools();
   const allConversationItems = [
@@ -156,10 +147,7 @@ export const processMessages = async () => {
           if (contentItem && contentItem.type === "output_text") {
             contentItem.text = assistantMessageContent;
             if (annotation) {
-              contentItem.annotations = [
-                ...(contentItem.annotations ?? []),
-                annotation,
-              ];
+              contentItem.annotations = [...(contentItem.annotations ?? []), annotation];
             }
           }
         }
@@ -291,7 +279,7 @@ export const processMessages = async () => {
           // Handle tool call (execute function)
           const toolResult = await handleTool(
             toolCallMessage.name as keyof typeof functionsMap,
-            toolCallMessage.parsedArguments
+            toolCallMessage.parsedArguments,
           );
 
           // Record tool output

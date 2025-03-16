@@ -35,10 +35,7 @@ export default function FunctionsView() {
             <Code size={16} />
           </div>
           <div className="text-zinc-800 font-mono text-sm mt-0.5">
-            {tool.name}(
-            {tool.parameters && Object.keys(tool.parameters).length > 0
-              ? getToolArgs(tool.parameters)
-              : ""}
+            {tool.name}({tool.parameters && Object.keys(tool.parameters).length > 0 ? getToolArgs(tool.parameters) : ""}
             )
           </div>
         </div>

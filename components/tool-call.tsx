@@ -1,6 +1,6 @@
 import React from "react";
 
-import { ToolCallItem } from "@/lib/assistant";
+import type { ToolCallItem } from "@/lib/assistant";
 import { BookOpenText, Clock, Globe, Zap } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { coy } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -18,9 +18,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
             <div className="flex gap-2 items-center text-blue-500 ml-[-8px]">
               <Zap size={16} />
               <div className="text-sm font-medium">
-                {toolCall.status === "completed"
-                  ? `Called ${toolCall.name}`
-                  : `Calling ${toolCall.name}...`}
+                {toolCall.status === "completed" ? `Called ${toolCall.name}` : `Calling ${toolCall.name}...`}
               </div>
             </div>
           </div>
@@ -73,9 +71,7 @@ function FileSearchCell({ toolCall }: ToolCallProps) {
     <div className="flex gap-2 items-center text-blue-500 mb-[-16px] ml-[-8px]">
       <BookOpenText size={16} />
       <div className="text-sm font-medium mb-0.5">
-        {toolCall.status === "completed"
-          ? "Searched files"
-          : "Searching files..."}
+        {toolCall.status === "completed" ? "Searched files" : "Searching files..."}
       </div>
     </div>
   );
@@ -86,9 +82,7 @@ function WebSearchCell({ toolCall }: ToolCallProps) {
     <div className="flex gap-2 items-center text-blue-500 mb-[-16px] ml-[-8px]">
       <Globe size={16} />
       <div className="text-sm font-medium">
-        {toolCall.status === "completed"
-          ? "Searched the web"
-          : "Searching the web..."}
+        {toolCall.status === "completed" ? "Searched the web" : "Searching the web..."}
       </div>
     </div>
   );

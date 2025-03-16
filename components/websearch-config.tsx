@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import useToolsStore from "@/stores/useToolsStore";
-import { Input } from "./ui/input";
+import React from "react";
 import CountrySelector from "./country-selector";
+import { Input } from "./ui/input";
 
 export default function WebSearchSettings() {
   const { webSearchConfig, setWebSearchConfig } = useToolsStore();
@@ -20,10 +20,7 @@ export default function WebSearchSettings() {
     });
   };
 
-  const handleLocationChange = (
-    field: "country" | "region" | "city",
-    value: string
-  ) => {
+  const handleLocationChange = (field: "country" | "region" | "city", value: string) => {
     setWebSearchConfig({
       ...webSearchConfig,
       user_location: {

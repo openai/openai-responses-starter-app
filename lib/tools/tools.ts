@@ -1,18 +1,13 @@
-import { toolsList } from "../../config/tools-list";
 import useToolsStore from "@/stores/useToolsStore";
-import { WebSearchConfig } from "@/stores/useToolsStore";
+import type { WebSearchConfig } from "@/stores/useToolsStore";
+import { toolsList } from "../../config/tools-list";
 
 interface WebSearchTool extends WebSearchConfig {
   type: "web_search";
 }
 export const getTools = () => {
-  const {
-    webSearchEnabled,
-    fileSearchEnabled,
-    functionsEnabled,
-    vectorStore,
-    webSearchConfig,
-  } = useToolsStore.getState();
+  const { webSearchEnabled, fileSearchEnabled, functionsEnabled, vectorStore, webSearchConfig } =
+    useToolsStore.getState();
 
   const tools = [];
 
@@ -55,7 +50,7 @@ export const getTools = () => {
           },
           strict: true,
         };
-      })
+      }),
     );
   }
 

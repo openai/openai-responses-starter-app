@@ -5,9 +5,7 @@ export async function GET(request: Request) {
     const unit = searchParams.get("unit");
 
     // 1. Get coordinates for the city
-    const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${location}&format=json`
-    );
+    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${location}&format=json`);
     const geoData = await geoRes.json();
 
     if (!geoData.length) {
@@ -22,7 +20,7 @@ export async function GET(request: Request) {
     const weatherRes = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m&temperature_unit=${
         unit ?? "celsius"
-      }`
+      }`,
     );
 
     if (!weatherRes.ok) {
@@ -37,14 +35,10 @@ export async function GET(request: Request) {
 
     // 4. Get current temperature
     const index = weather.hourly.time.indexOf(currentHourISO);
-    const currentTemperature =
-      index !== -1 ? weather.hourly.temperature_2m[index] : null;
+    const currentTemperature = index !== -1 ? weather.hourly.temperature_2m[index] : null;
 
     if (currentTemperature === null) {
-      return new Response(
-        JSON.stringify({ error: "Temperature data unavailable" }),
-        { status: 500 }
-      );
+      return new Response(JSON.stringify({ error: "Temperature data unavailable" }), { status: 500 });
     }
 
     return new Response(JSON.stringify({ temperature: currentTemperature }), {

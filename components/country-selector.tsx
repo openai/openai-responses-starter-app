@@ -4,21 +4,10 @@ import React from "react";
 
 import { Check, ChevronsUpDown } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export const ISO_3166_ALPHA_2_CODES = new Set([
   "AF",
@@ -296,9 +285,7 @@ export default function CountrySelector({
             aria-expanded={open}
             className="w-full justify-between text-muted-foreground"
           >
-            {value
-              ? countries.find((country) => country.value === value)?.label
-              : "Select country..."}
+            {value ? countries.find((country) => country.value === value)?.label : "Select country..."}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -317,12 +304,7 @@ export default function CountrySelector({
                       setOpen(false);
                     }}
                   >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === country.value ? "opacity-100" : "opacity-0"
-                      )}
-                    />
+                    <Check className={cn("mr-2 h-4 w-4", value === country.value ? "opacity-100" : "opacity-0")} />
                     {country.label}
                   </CommandItem>
                 ))}
