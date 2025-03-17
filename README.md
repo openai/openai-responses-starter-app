@@ -20,18 +20,29 @@ This app is meant to be used as a starting point to build a conversational assis
 
 ## How to use
 
-1. **Set Up the OpenAI API:**
+1. **Set up the OpenAI API:**
 
    - If you're new to the OpenAI API, [sign up for an account](https://platform.openai.com/signup).
    - Follow the [Quickstart](https://platform.openai.com/docs/quickstart) to retrieve your API key.
 
-2. **Clone the Repository:**
+2. **Set the OpenAI API key:**
+
+   2 options:
+
+   - Set the `OPENAI_API_KEY` environment variable [globally in your system](https://platform.openai.com/docs/libraries#create-and-export-an-api-key)
+   - Set the `OPENAI_API_KEY` environment variable in the project: Create a `.env` file at the root of the project and add the following line (see `.env.example` for reference):
+
+   ```bash
+   OPENAI_API_KEY=<your_api_key>
+   ```
+
+3. **Clone the Repository:**
 
    ```bash
    git clone https://github.com/openai/openai-responses-starter-app.git
    ```
 
-3. **Install dependencies:**
+4. **Install dependencies:**
 
    Run in the project root:
 
@@ -39,7 +50,7 @@ This app is meant to be used as a starting point to build a conversational assis
    npm install
    ```
 
-4. **Run the app:**
+5. **Run the app:**
 
    ```bash
    npm run dev
