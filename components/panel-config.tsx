@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { Switch } from "./ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { TooltipProvider } from "./ui/tooltip";
@@ -37,12 +37,7 @@ export default function PanelConfig({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Switch
-          id={title}
-          checked={enabled}
-          onCheckedChange={handleToggle}
-          disabled={disabled}
-        />
+        <Switch id={title} checked={enabled} onCheckedChange={handleToggle} disabled={disabled} />
       </div>
       <div className="mt-1">{children}</div>
     </div>

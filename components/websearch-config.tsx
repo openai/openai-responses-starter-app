@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import useToolsStore from "@/stores/useToolsStore";
-import { Input } from "./ui/input";
+import React from "react";
 import CountrySelector from "./country-selector";
+import { Input } from "./ui/input";
 
 export default function WebSearchSettings() {
   const { webSearchConfig, setWebSearchConfig } = useToolsStore();
@@ -20,10 +20,7 @@ export default function WebSearchSettings() {
     });
   };
 
-  const handleLocationChange = (
-    field: "country" | "region" | "city",
-    value: string
-  ) => {
+  const handleLocationChange = (field: "country" | "region" | "city", value: string) => {
     setWebSearchConfig({
       ...webSearchConfig,
       user_location: {
@@ -38,12 +35,13 @@ export default function WebSearchSettings() {
     <div>
       <div className="flex items-center justify-between">
         <div className="text-zinc-600 text-sm">User&apos;s location</div>
-        <div
+        <button
+          type="button"
           className="text-zinc-400 text-sm px-1 transition-colors hover:text-zinc-600 cursor-pointer"
           onClick={handleClear}
         >
           Clear
-        </div>
+        </button>
       </div>
       <div className="mt-3 space-y-3 text-zinc-400">
         <div className="flex items-center gap-2">

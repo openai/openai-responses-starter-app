@@ -1,6 +1,6 @@
+import { defaultVectorStore } from "@/config/constants";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { defaultVectorStore } from "@/config/constants";
 
 type File = {
   id: string;
@@ -69,8 +69,8 @@ const useToolsStore = create<StoreState>()(
     }),
     {
       name: "tools-store",
-    }
-  )
+    },
+  ),
 );
 
 export default useToolsStore;

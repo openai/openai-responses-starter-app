@@ -1,12 +1,11 @@
 "use client";
+import { type Item, processMessages } from "@/lib/assistant";
+import useConversationStore from "@/stores/useConversationStore";
 import React from "react";
 import Chat from "./chat";
-import useConversationStore from "@/stores/useConversationStore";
-import { Item, processMessages } from "@/lib/assistant";
 
 export default function Assistant() {
-  const { chatMessages, addConversationItem, addChatMessage } =
-    useConversationStore();
+  const { chatMessages, addConversationItem, addChatMessage } = useConversationStore();
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;

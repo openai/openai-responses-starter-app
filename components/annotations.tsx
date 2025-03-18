@@ -18,12 +18,7 @@ const AnnotationPill = ({ annotation }: { annotation: Annotation }) => {
       return <span className={className}>{annotation.filename}</span>;
     case "url_citation":
       return (
-        <a
-          target="_blank"
-          rel="noopener noreferrer"
-          href={annotation.url}
-          className={className}
-        >
+        <a target="_blank" rel="noopener noreferrer" href={annotation.url} className={className}>
           <div className=" flex items-center gap-1">
             <div className="truncate">{annotation.title}</div>
             <ExternalLinkIcon size={12} className="shrink-0" />
@@ -34,23 +29,19 @@ const AnnotationPill = ({ annotation }: { annotation: Annotation }) => {
 };
 
 const Annotations = ({ annotations }: { annotations: Annotation[] }) => {
-  const uniqueAnnotations = annotations.reduce(
-    (acc: Annotation[], annotation) => {
-      if (
-        !acc.some(
-          (a: Annotation) =>
-            a.type === annotation.type &&
-            ((annotation.type === "file_citation" &&
-              a.fileId === annotation.fileId) ||
-              (annotation.type === "url_citation" && a.url === annotation.url))
-        )
-      ) {
-        acc.push(annotation);
-      }
-      return acc;
-    },
-    []
-  );
+  const uniqueAnnotations = annotations.reduce((acc: Annotation[], annotation) => {
+    if (
+      !acc.some(
+        (a: Annotation) =>
+          a.type === annotation.type &&
+          ((annotation.type === "file_citation" && a.fileId === annotation.fileId) ||
+            (annotation.type === "url_citation" && a.url === annotation.url)),
+      )
+    ) {
+      acc.push(annotation);
+    }
+    return acc;
+  }, []);
 
   return (
     <div className="flex max-w-full mr-28 ml-4 overflow-x-scroll gap-2 mb-2">
