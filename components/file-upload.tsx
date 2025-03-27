@@ -32,8 +32,12 @@ export default function FileUpload({
   onUnlinkStore,
 }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [newStoreName, setNewStoreName] = useState<string>("Default store");
+  const [filename, setFilename] = useState('');
   const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState('');
+  const [collectionName, setCollectionName] = useState('');
+  const [newStoreName, setNewStoreName] = useState<string>("Default store");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
   const acceptedFileTypes = {
@@ -95,7 +99,13 @@ export default function FileUpload({
       alert("Please select a file to upload.");
       return;
     }
+    if (!collectionName) {
+      alert("Please enter a collection name.");
+      return;
+    }
     setUploading(true);
+    setUploadError('');
+    setUploadSuccess(false);
 
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -106,66 +116,23 @@ export default function FileUpload({
       };
 
       // 1. Upload file
-      const uploadResponse = await fetch("/api/vector_stores/upload_file", {
+      const uploadResponse = await fetch("/api/pdf_agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileObject,
+          collectionName: newStoreName, // Użyj newStoreName jako domyślnej nazwy kolekcji
         }),
       });
       if (!uploadResponse.ok) {
         throw new Error("Error uploading file");
       }
-      const uploadData = await uploadResponse.json();
-      const fileId = uploadData.id;
-      if (!fileId) {
-        throw new Error("Error getting file ID");
-      }
-      console.log("Uploaded file:", uploadData);
-
-      let finalVectorStoreId = vectorStoreId;
-
-      // 2. If no vector store is linked, create one
-      if (!vectorStoreId || vectorStoreId === "") {
-        const createResponse = await fetch("/api/vector_stores/create_store", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            storeName: newStoreName,
-          }),
-        });
-        if (!createResponse.ok) {
-          throw new Error("Error creating vector store");
-        }
-        const createData = await createResponse.json();
-        finalVectorStoreId = createData.id;
-      }
-
-      if (!finalVectorStoreId) {
-        throw new Error("Error getting vector store ID");
-      }
-
-      onAddStore(finalVectorStoreId);
-
-      // 3. Add file to vector store
-      const addFileResponse = await fetch("/api/vector_stores/add_file", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fileId,
-          vectorStoreId: finalVectorStoreId,
-        }),
-      });
-      if (!addFileResponse.ok) {
-        throw new Error("Error adding file to vector store");
-      }
-      const addFileData = await addFileResponse.json();
-      console.log("Added file to vector store:", addFileData);
-      setFile(null);
-      setDialogOpen(false);
-    } catch (error) {
-      console.error("Error during file upload process:", error);
-      alert("There was an error processing your file. Please try again.");
+      const data = await uploadResponse.json();
+      setUploadSuccess(true);
+      setFilename(data.filename);
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      setUploadError(error.message || "An unexpected error occurred.");
     } finally {
       setUploading(false);
     }
@@ -250,11 +217,10 @@ export default function FileUpload({
                 >
                   <input {...getInputProps()} />
                   <div
-                    className={`absolute rounded-full transition-all duration-300 ${
-                      isDragActive
-                        ? "h-56 w-56 bg-zinc-100"
-                        : "h-0 w-0 bg-transparent"
-                    }`}
+                    className={`absolute rounded-full transition-all duration-300 ${isDragActive
+                      ? "h-56 w-56 bg-zinc-100"
+                      : "h-0 w-0 bg-transparent"
+                      }`}
                   ></div>
                   <div className="flex flex-col items-center text-center z-10 cursor-pointer">
                     <FilePlus2 className="mb-4 size-8 text-zinc-700" />
@@ -269,6 +235,14 @@ export default function FileUpload({
               {uploading ? "Uploading..." : "Add"}
             </Button>
           </DialogFooter>
+          <div className="my-6">
+            <Input
+              type="text"
+              placeholder="Nazwa kolekcji"
+              value={newStoreName}
+              onChange={(e) => setNewStoreName(e.target.value)}
+            />
+          </div>
         </form>
       </DialogContent>
     </Dialog>

@@ -1,0 +1,21 @@
+[config]
+base_tool_set = "all"
+
+[models]
+default = "claude-3-opus-20240229"
+fast = "claude-3-sonnet-20240229"
+
+[commands]
+dev = "npm run dev"
+build = "npm run build"
+lint = "npm run lint"
+start = "npm run start"
+
+[files]
+include = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json", "**/*.md"]
+exclude = ["node_modules", ".next", "out", ".git"]
+ignore_large_files = true
+max_file_size = 1000000  # 1MB
+
+[context]
+style_guide_file = "CLAUDE.md"

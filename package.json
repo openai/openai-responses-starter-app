@@ -1,5 +1,5 @@
 {
-  "name": "responses-starter-app",
+  "name": "responses-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -17,6 +17,8 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@reach/visually-hidden": "^0.18.0",
     "@xyflow/react": "^12.3.0",
+    "canvas": "^2.11.2",
+    "chromadb": "^2.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -25,6 +27,9 @@
     "next": "^15.2.3",
     "openai": "^4.87.3",
     "partial-json": "^0.1.7",
+    "pdf-parse": "^1.1.1",
+    "pdfjs": "^2.5.3",
+    "pdfjs-dist": "^5.0.375",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.3.8",
@@ -33,12 +38,14 @@
     "recharts": "^2.12.7",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^5.0.4",
     "vaul": "^1.0.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.16.10",
+    "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18",
     "@types/react-syntax-highlighter": "^15.5.13",
@@ -47,5 +54,10 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.6.2"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "sharp"
+    ]
   }
 }
