@@ -36,14 +36,17 @@
     "react-markdown": "^9.0.1",
     "react-syntax-highlighter": "^15.6.1",
     "recharts": "^2.12.7",
+    "shadcn": "2.4.0-canary.17",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^5.0.4",
+    "toml": "^3.0.0",
     "vaul": "^1.0.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@radix-ui/react-select": "^2.1.6",
     "@types/node": "^20.16.10",
     "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18.3.10",

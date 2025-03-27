@@ -1,0 +1,37 @@
+[llm]
+# Domyślne ustawienia dla modeli
+default_model = "gpt-4o-mini"
+default_provider = "openai"
+
+[providers]
+# Konfiguracja OpenAI
+[providers.openai]
+api_key = "${OPENAI_API_KEY}"
+base_url = "https://api.openai.com/v1"
+models = [
+  "gpt-4o",
+  "gpt-4o-mini",
+  "gpt-4-turbo",
+  "gpt-3.5-turbo"
+]
+
+# Konfiguracja OpenRouter
+[providers.openrouter]
+api_key = "${OPENROUTER_API_KEY}"
+base_url = "https://openrouter.ai/api/v1"
+models = [
+  "anthropic/claude-3-opus",
+  "anthropic/claude-3-sonnet",
+  "anthropic/claude-3-haiku",
+  "meta-llama/llama-3-70b-instruct",
+  "meta-llama/llama-3-8b-instruct",
+  "mistralai/mistral-large"
+]
+
+# Konfiguracja dla custom LLM
+[providers.custom]
+api_key = "${CUSTOM_LLM_API_KEY}"
+base_url = "${CUSTOM_LLM_BASE_URL}"
+models = [
+  "${CUSTOM_LLM_MODEL}"
+]

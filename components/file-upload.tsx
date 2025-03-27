@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState, FormEvent } from "react";
+import React, { useCallback, useState, FormEvent, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { ModelSelector } from "./model-selector";
 
 interface FileUploadProps {
   vectorStoreId?: string;
@@ -39,6 +40,10 @@ export default function FileUpload({
   const [collectionName, setCollectionName] = useState('');
   const [newStoreName, setNewStoreName] = useState<string>("Default store");
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  
+  // Dodane stany dla wyboru providera i modelu
+  const [selected_provider, set_selected_provider] = useState<string>("openai");
+  const [selected_model, set_selected_model] = useState<string>("gpt-4o-mini");
 
   const acceptedFileTypes = {
     "text/x-c": [".c"],
@@ -93,14 +98,32 @@ export default function FileUpload({
     return btoa(binary);
   };
 
+  /**
+   * Obsługuje zmianę dostawcy modeli
+   * 
+   * @param provider - Wybrany dostawca
+   */
+  const handle_provider_change = (provider: string) => {
+    set_selected_provider(provider);
+  };
+
+  /**
+   * Obsługuje zmianę modelu
+   * 
+   * @param model - Wybrany model
+   */
+  const handle_model_change = (model: string) => {
+    set_selected_model(model);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!file) {
       alert("Please select a file to upload.");
       return;
     }
-    if (!collectionName) {
-      alert("Please enter a collection name.");
+    if (!newStoreName.trim()) {
+      alert("Please enter a vector store name.");
       return;
     }
     setUploading(true);
@@ -115,21 +138,35 @@ export default function FileUpload({
         content: base64Content,
       };
 
-      // 1. Upload file
-      const uploadResponse = await fetch("/api/pdf_agent", {
+      // Dodajemy informacje o providerze i modelu
+      const uploadResponse = await fetch("/api/vector_stores/add_file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileObject,
-          collectionName: newStoreName, // Użyj newStoreName jako domyślnej nazwy kolekcji
+          collectionName: newStoreName,
+          provider: selected_provider,
+          model: selected_model
         }),
       });
+      
       if (!uploadResponse.ok) {
-        throw new Error("Error uploading file");
+        const errorData = await uploadResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "Error uploading file");
       }
+      
       const data = await uploadResponse.json();
       setUploadSuccess(true);
       setFilename(data.filename);
+      
+      // Jeśli odpowiedź zawiera ID vector store, przekaż je do rodzica
+      if (data.vectorStoreId) {
+        onAddStore(data.vectorStoreId);
+      }
+      
+      // Zamykamy dialog po udanym przesłaniu
+      setDialogOpen(false);
+      
     } catch (error: any) {
       console.error("Upload error:", error);
       setUploadError(error.message || "An unexpected error occurred.");
@@ -146,27 +183,49 @@ export default function FileUpload({
           Upload
         </div>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] md:max-w-[600px] max-h-[80vh] overflow-y-scrollfrtdtd">
+      <DialogContent className="sm:max-w-[500px] md:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Add files to your vector store</DialogTitle>
           </DialogHeader>
+          
+          {/* Informacje o vector store */}
           <div className="my-6">
             {!vectorStoreId || vectorStoreId === "" ? (
-              <div className="flex items-start gap-2 text-sm">
-                <label className="font-medium w-72" htmlFor="storeName">
-                  New vector store name
-                  <div className="text-xs text-zinc-400">
-                    A new store will be created when you upload a file.
+              <div className="space-y-4">
+                <div className="flex items-start gap-2 text-sm">
+                  <label className="font-medium w-72" htmlFor="storeName">
+                    New vector store name
+                    <div className="text-xs text-zinc-400">
+                      A new store will be created when you upload a file.
+                    </div>
+                  </label>
+                  <Input
+                    id="storeName"
+                    type="text"
+                    value={newStoreName}
+                    onChange={(e) => setNewStoreName(e.target.value)}
+                    className="border rounded p-2"
+                  />
+                </div>
+                
+                {/* Dodany selektor modeli */}
+                <div className="flex items-start gap-2 text-sm">
+                  <label className="font-medium w-72">
+                    Model provider and type
+                    <div className="text-xs text-zinc-400">
+                      Select the provider and model to use for embeddings.
+                    </div>
+                  </label>
+                  <div className="flex-1">
+                    <ModelSelector 
+                      onProviderChange={handle_provider_change}
+                      onModelChange={handle_model_change}
+                      defaultProvider={selected_provider}
+                      defaultModel={selected_model}
+                    />
                   </div>
-                </label>
-                <Input
-                  id="storeName"
-                  type="text"
-                  value={newStoreName}
-                  onChange={(e) => setNewStoreName(e.target.value)}
-                  className="border rounded p-2"
-                />
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-between flex-1 min-w-0">
@@ -174,7 +233,7 @@ export default function FileUpload({
                   <div className="text-sm font-medium w-24 text-nowrap">
                     Vector store
                   </div>
-                  <div className="text-zinc-400  text-xs font-mono flex-1 text-ellipsis truncate">
+                  <div className="text-zinc-400 text-xs font-mono flex-1 text-ellipsis truncate">
                     {vectorStoreId}
                   </div>
                   <TooltipProvider>
@@ -195,6 +254,8 @@ export default function FileUpload({
               </div>
             )}
           </div>
+          
+          {/* Dropzone do przesyłania plików */}
           <div className="flex justify-center items-center mb-4 h-[200px]">
             {file ? (
               <div className="flex flex-col items-start">
@@ -230,19 +291,23 @@ export default function FileUpload({
               </div>
             )}
           </div>
+          
+          {/* Wyświetlanie błędów i informacji o sukcesie */}
+          {uploadError && (
+            <div className="text-red-500 mb-4 text-sm">{uploadError}</div>
+          )}
+          
+          {uploadSuccess && (
+            <div className="text-green-500 mb-4 text-sm">
+              File uploaded successfully!
+            </div>
+          )}
+          
           <DialogFooter>
-            <Button type="submit" disabled={uploading}>
+            <Button type="submit" disabled={uploading || !file}>
               {uploading ? "Uploading..." : "Add"}
             </Button>
           </DialogFooter>
-          <div className="my-6">
-            <Input
-              type="text"
-              placeholder="Nazwa kolekcji"
-              value={newStoreName}
-              onChange={(e) => setNewStoreName(e.target.value)}
-            />
-          </div>
         </form>
       </DialogContent>
     </Dialog>

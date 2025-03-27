@@ -32,12 +32,15 @@ export const getTools = () => {
     tools.push(webSearchTool);
   }
 
-  if (fileSearchEnabled) {
+  if (fileSearchEnabled && vectorStore?.id) {
     const fileSearchTool = {
       type: "file_search",
-      vector_store_ids: [vectorStore?.id],
+      vector_store_ids: [vectorStore.id],
     };
     tools.push(fileSearchTool);
+    console.log("File search tool enabled with vector store:", vectorStore.id);
+  } else if (fileSearchEnabled) {
+    console.warn("File search enabled but no vector store available");
   }
 
   if (functionsEnabled) {
