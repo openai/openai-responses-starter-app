@@ -5,6 +5,15 @@ import WebSearchConfig from "./websearch-config";
 import FunctionsView from "./functions-view";
 import PanelConfig from "./panel-config";
 import useToolsStore from "@/stores/useToolsStore";
+import { Switch } from "@/components/ui/switch";
+import logger from "@/lib/logger";
+import dynamic from "next/dynamic";
+
+// Komponent selektora modeli (model-selector) jest importowany dynamicznie
+const ModelSelector = dynamic(() => import("./model-selector"), {
+    ssr: false,
+    loading: () => <div className="p-2 text-gray-400">Ładowanie selektora modeli...</div>
+});
 
 /**
  * Panel narzędzi wyświetlający aktywne narzędzia asystenta
@@ -21,20 +30,66 @@ export default function ToolsPanel() {
         toggleFileSearch,
         toggleWebSearch,
         toggleFunctions,
+        currentProvider,
+        isWebSearchSupported
     } = useToolsStore();
+
+    const handleToggleWebSearch = () => {
+        const is_supported = isWebSearchSupported();
+
+        if (!webSearchEnabled && !is_supported) {
+            console.log(`[TOOL_CHANGE] Wyszukiwanie internetowe niedostępne dla dostawcy: ${currentProvider}`);
+            logger.warn("TOOLS", `Wyszukiwanie internetowe niedostępne dla dostawcy: ${currentProvider}`);
+            return;
+        }
+
+        toggleWebSearch();
+        const new_state = !webSearchEnabled;
+        logger.info("TOOLS", `Wyszukiwanie internetowe: ${new_state ? 'włączone' : 'wyłączone'}`);
+        console.log(`[TOOL_CHANGE] Wyszukiwanie internetowe: ${new_state ? 'włączone' : 'wyłączone'}`);
+    };
+
+    const handleToggleFileSearch = () => {
+        toggleFileSearch();
+        const new_state = !fileSearchEnabled;
+        logger.info("TOOLS", `Wyszukiwanie plików: ${new_state ? 'włączone' : 'wyłączone'}`);
+        console.log(`[TOOL_CHANGE] Wyszukiwanie plików: ${new_state ? 'włączone' : 'wyłączone'}`);
+    };
+
+    const handleToggleFunctions = () => {
+        toggleFunctions();
+        const new_state = !functionsEnabled;
+        logger.info("TOOLS", `Funkcje: ${new_state ? 'włączone' : 'wyłączone'}`);
+        console.log(`[TOOL_CHANGE] Funkcje: ${new_state ? 'włączone' : 'wyłączone'}`);
+    };
 
     // Sprawdzanie, czy jakiekolwiek narzędzie jest włączone
     const any_tool_enabled = fileSearchEnabled || webSearchEnabled || functionsEnabled;
 
+    // Określ opis API na podstawie aktualnego dostawcy
+    const getWebSearchApiDescription = () => {
+        const is_supported = isWebSearchSupported();
+
+        if (!is_supported) return "Niedostępne dla tego dostawcy";
+
+        if (currentProvider === "openai") {
+            return "Wykorzystuje OpenAI Web Search API";
+        } else if (currentProvider === "openrouter") {
+            return "Wykorzystuje OpenRouter Web Search";
+        } else {
+            return "Aktywne";
+        }
+    };
+
     return (
-        <div className="h-full p-4 w-full bg-white rounded-t-xl md:rounded-none border-l-1 border-stone-100">
-            <div className="flex flex-col h-full">
-                <div className="mb-4 pb-2 border-b border-gray-100">
+        <div className="overflow-y-auto p-4 w-full bg-white rounded-t-xl md:rounded-none border-l-1 border-stone-100 mt-4">
+            <div className="flex flex-col h-full mt-4">
+                <div className="mb-4 pb-2 border-b border-gray-100 mt-2">
                     <h2 className="text-lg font-semibold">Narzędzia</h2>
                     <p className="text-sm text-gray-500">Aktywne narzędzia asystenta</p>
                 </div>
 
-                <div className="flex-1 overflow-y-auto space-y-4">
+                <div className="flex-1 overflow-y-auto space-y-4 mt-2">
                     {/* Wyświetlanie informacji, gdy żadne narzędzie nie jest włączone */}
                     {!any_tool_enabled && (
                         <div className="p-4 bg-gray-50 rounded-lg text-center">
@@ -45,40 +100,56 @@ export default function ToolsPanel() {
                     )}
 
                     {/* Panel wyszukiwania plików */}
-                    {fileSearchEnabled && (
-                        <PanelConfig
-                            title="Wyszukiwanie plików"
-                            tooltip="Pozwala na wyszukiwanie w bazie wiedzy (magazynie wektorowym)"
-                            enabled={fileSearchEnabled}
-                            setEnabled={toggleFileSearch}
-                        >
-                            <FileSearchSetup />
-                        </PanelConfig>
-                    )}
+                    <PanelConfig
+                        title="Wyszukiwanie plików"
+                        tooltip="Pozwala na wyszukiwanie w bazie wiedzy (magazynie wektorowym)"
+                        enabled={fileSearchEnabled}
+                        setEnabled={handleToggleFileSearch}
+                    >
+                        {fileSearchEnabled && <FileSearchSetup />}
+                    </PanelConfig>
 
-                    {/* Panel wyszukiwania w internecie */}
-                    {webSearchEnabled && (
-                        <PanelConfig
-                            title="Wyszukiwanie w internecie"
-                            tooltip="Pozwala na wyszukiwanie w internecie"
-                            enabled={webSearchEnabled}
-                            setEnabled={toggleWebSearch}
-                        >
-                            <WebSearchConfig />
-                        </PanelConfig>
-                    )}
+                    {/* Zunifikowany panel wyszukiwania internetowego */}
+                    <PanelConfig
+                        title="Wyszukiwanie internetowe"
+                        tooltip="Pozwala na wyszukiwanie w internecie przy użyciu odpowiedniego API"
+                        enabled={webSearchEnabled}
+                        setEnabled={handleToggleWebSearch}
+                        disabled={!isWebSearchSupported()}
+                    >
+                        <div className="p-3 text-sm">
+                            <p className="text-gray-500 mb-2">{getWebSearchApiDescription()}</p>
+                            {webSearchEnabled && <WebSearchConfig />}
+                        </div>
+                    </PanelConfig>
 
                     {/* Panel funkcji */}
-                    {functionsEnabled && (
-                        <PanelConfig
-                            title="Funkcje"
-                            tooltip="Pozwala na używanie lokalnie zdefiniowanych funkcji"
-                            enabled={functionsEnabled}
-                            setEnabled={toggleFunctions}
-                        >
-                            <FunctionsView />
-                        </PanelConfig>
-                    )}
+                    <PanelConfig
+                        title="Funkcje"
+                        tooltip="Pozwala na używanie lokalnie zdefiniowanych funkcji"
+                        enabled={functionsEnabled}
+                        setEnabled={handleToggleFunctions}
+                    >
+                        {functionsEnabled && <FunctionsView />}
+                    </PanelConfig>
+
+                    {/* Panel wyboru modelu */}
+                    <PanelConfig
+                        title="Wybór modelu"
+                        tooltip="Pozwala na wybór modelu językowego"
+                        enabled={true}
+                    >
+                        <div className="p-3">
+                            <ModelSelector
+                                onProviderChange={(provider) => {
+                                    logger.info("MODEL_SELECTOR", `Zmiana dostawcy przez panel: ${provider}`);
+                                }}
+                                onModelChange={(model) => {
+                                    logger.info("MODEL_SELECTOR", `Zmiana modelu przez panel: ${model}`);
+                                }}
+                            />
+                        </div>
+                    </PanelConfig>
                 </div>
             </div>
         </div>
