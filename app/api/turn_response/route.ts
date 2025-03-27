@@ -1,7 +1,21 @@
+/**
+ * @fileoverview Endpoint API obsługujący zapytania do modeli LLM
+ * Obsługuje różnych dostawców (OpenAI, Anthropic itp.) i różne modele
+ */
+
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { load_models } from "@/lib/llm-providers/model_loader";
+import { Stream } from "openai/streaming";
+import { ChatCompletionChunk, ChatCompletionCreateParamsStreaming } from "openai/resources/chat/completions";
 
+/**
+ * Obsługuje żądania POST do API.
+ * Przekazuje zapytanie do odpowiedniego dostawcy LLM i zwraca odpowiedź jako strumień SSE.
+ *
+ * @param request - Żądanie HTTP zawierające parametry zapytania
+ * @returns Strumień SSE z odpowiedzią modelu
+ */
 export async function POST(request: Request) {
     try {
         const {
@@ -37,8 +51,8 @@ export async function POST(request: Request) {
             baseURL: provider === "openrouter" ? "https://openrouter.ai/api/v1" : undefined
         });
 
-        // Konfiguracja zapytania
-        const requestConfig: any = {
+        // Konfiguracja zapytania ze zdefiniowanym typem dla strumienia
+        const request_config: ChatCompletionCreateParamsStreaming = {
             model: model_name,
             messages,
             tools,
@@ -46,41 +60,47 @@ export async function POST(request: Request) {
             parallel_tool_calls: false,
         };
 
-        // Utworzenie strumienia zdarzeń
-        const events = await openai.chat.completions.create(requestConfig);
+        // Utworzenie strumienia zdarzeń z precyzyjnym typowaniem
+        const stream_response = await openai.chat.completions.create(request_config);
 
         // Utworzenie strumienia odczytywalnego
         const stream = new ReadableStream({
             async start(controller) {
                 try {
-                    for await (const event of events) {
+                    // Przetwarzanie każdego fragmentu odpowiedzi streama
+                    for await (const chunk of stream_response) {
+                        // Formatowanie danych dla klienta w formacie SSE
+                        const is_tool_call = chunk.choices[0]?.delta?.tool_calls !== undefined;
                         const data = JSON.stringify({
-                            event: "message",
-                            data: event,
+                            event: is_tool_call ? "tool_call" : "message",
+                            data: chunk
                         });
+
+                        // Wysłanie sformatowanych danych do klienta
                         controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
                     }
+                    // Zamknięcie strumienia po zakończeniu przetwarzania
                     controller.close();
                 } catch (error) {
                     console.error("Błąd w pętli strumieniowej:", error);
                     controller.error(error);
                 }
-            },
+            }
         });
 
-        // Zwrócenie strumienia SSE
+        // Zwrócenie strumienia SSE z odpowiednimi nagłówkami
         return new Response(stream, {
             headers: {
                 "Content-Type": "text/event-stream",
                 "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
+                "Connection": "keep-alive"
+            }
         });
     } catch (error) {
         console.error("Błąd w obsłudze zapytania POST:", error);
         return NextResponse.json(
             {
-                error: error instanceof Error ? error.message : "Nieznany błąd",
+                error: error instanceof Error ? error.message : "Nieznany błąd"
             },
             { status: 500 }
         );
