@@ -10,6 +10,7 @@ import {
     getEmbedding,
     CONFIG
 } from '@/utils/pdf-processing';
+import { formatWithCustomParser } from '@/utils/custom-parser';
 
 const client = new ChromaClient();
 
@@ -124,17 +125,23 @@ export async function processPDFJob(jobId: string): Promise<void> {
 
 
             // Extract text from PDF with retry mechanism
-            const text = await withRetry(
+            const rawText = await withRetry(
                 () => extractTextFromPDF(finalArrayBuffer),
                 3,
                 "text extraction"
             );
 
-            if (!text) {
+            if (!rawText) {
                 throw new Error('Failed to extract text from PDF');
             }
 
-            console.log(`Extracted ${text.length} characters of text`);
+            console.log(`Extracted ${rawText.length} characters of raw text`);
+            
+            // Apply custom parser formatting to the text
+            // Note: The custom parser should be implemented separately
+            const text = await formatWithCustomParser(rawText);
+            
+            console.log(`Formatted text: ${text.length} characters`);
 
             // Generate embedding with retry mechanism
             console.log('Generating text embedding...');
