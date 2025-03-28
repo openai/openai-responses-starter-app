@@ -2,8 +2,9 @@
 import Assistant from "@/components/assistant";
 import ToolsPanel from "@/components/tools-panel";
 import { Menu, X, Settings } from "lucide-react";
-import { useState, useCallback } from "react";
-import { ModelSelector } from "@/components/model-selector";
+import { useState, useCallback, useEffect } from "react";
+import ModelSelector from "@/components/model-selector";
+import ProviderSelector from "@/components/provider-selector";
 import {
     Dialog,
     DialogContent,
@@ -14,6 +15,24 @@ import {
 import useToolsStore from "@/stores/useToolsStore";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+
+// Definicja dostępnych dostawców i modeli
+const AVAILABLE_PROVIDERS = [
+    {
+        id: "openai",
+        name: "OpenAI",
+        models: ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"],
+        apiType: "response",
+        webSearchType: "openai"
+    },
+    {
+        id: "openrouter",
+        name: "OpenRouter",
+        models: ["anthropic/claude-3.5-sonnet", "google/gemini-pro-1.5", "mistralai/mixtral-8x7b"], // Przykładowe modele
+        apiType: "chat_completions",
+        webSearchType: "openrouter"
+    }
+];
 
 /**
  * Główny komponent aplikacji
@@ -26,9 +45,9 @@ export default function Main() {
     const [is_tools_panel_open, set_is_tools_panel_open] = useState(false);
     const [is_settings_open, set_is_settings_open] = useState(false);
 
-    // Stany do przechowywania wybranego dostawcy i modelu
-    const [selected_provider, set_selected_provider] = useState<string>("openai");
-    const [selected_model, set_selected_model] = useState<string>("gpt-4o-mini");
+    // Stany do przechowywania wybranego dostawcy i modelu - inicjalizacja z pierwszego dostawcy
+    const [selected_provider, set_selected_provider] = useState<string>(AVAILABLE_PROVIDERS[0].id);
+    const [selected_model, set_selected_model] = useState<string>(AVAILABLE_PROVIDERS[0].models[0]);
 
     // Pobranie stanu narzędzi z useToolsStore
     const {
@@ -42,11 +61,16 @@ export default function Main() {
 
     /**
      * Obsługuje zmianę dostawcy modeli
+     * Resetuje model do pierwszego dostępnego dla nowego dostawcy
      *
-     * @param provider - Wybrany dostawca
+     * @param providerId - ID wybranego dostawcy
      */
-    const handle_provider_change = (provider: string) => {
-        set_selected_provider(provider);
+    const handle_provider_change = (providerId: string) => {
+        const providerConfig = AVAILABLE_PROVIDERS.find(p => p.id === providerId);
+        if (providerConfig) {
+            set_selected_provider(providerId);
+            set_selected_model(providerConfig.models[0]); // Ustaw pierwszy model dla nowego dostawcy
+        }
     };
 
     /**
@@ -65,6 +89,9 @@ export default function Main() {
     const handle_tool_toggle = useCallback((toggleFunction: () => void) => {
         toggleFunction();
     }, []);
+
+    // Pobierz listę modeli dla aktualnie wybranego dostawcy
+    const currentModels = AVAILABLE_PROVIDERS.find(p => p.id === selected_provider)?.models || [];
 
     return (
         <div className="flex flex-col md:flex-row h-screen w-full">
@@ -91,14 +118,23 @@ export default function Main() {
                                     <DialogTitle>Ustawienia aplikacji</DialogTitle>
                                 </DialogHeader>
                                 <div className="py-4 space-y-6">
+                                    {/* Ustawienia dostawcy */}
+                                    <div>
+                                        <h3 className="text-sm font-medium mb-2">Dostawca AI</h3>
+                                        <ProviderSelector
+                                            provider={selected_provider}
+                                            onProviderChange={handle_provider_change}
+                                        />
+                                    </div>
+
                                     {/* Ustawienia modelu */}
                                     <div>
                                         <h3 className="text-sm font-medium mb-2">Model AI</h3>
                                         <ModelSelector
-                                            onProviderChange={handle_provider_change}
+                                            provider={selected_provider}
+                                            model={selected_model}
                                             onModelChange={handle_model_change}
-                                            defaultProvider={selected_provider}
-                                            defaultModel={selected_model}
+                                            models={currentModels}
                                         />
                                     </div>
 

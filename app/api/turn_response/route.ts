@@ -1,9 +1,6 @@
 /**
  * @fileoverview Endpoint API obsługujący zapytania do modeli LLM
- * Obsługuje różnych dostawców:
- * - OpenAI (Responses API)
- * - OpenRouter (Chat Completions API z wyszukiwaniem internetowym przez sufiks :online)
- * - Lokalne LLM (Chat Completions API)
+ * Obsługuje różnych dostawców (OpenAI, Anthropic itp.) i różne modele
  */
 
 import { NextResponse } from "next/server";
@@ -12,35 +9,6 @@ import { load_models } from "@/lib/llm-providers/model_loader";
 import { Stream } from "openai/streaming";
 import { ChatCompletionChunk, ChatCompletionCreateParamsStreaming } from "openai/resources/chat/completions";
 import logger from "@/lib/logger";
-import fs from 'fs';
-import path from 'path';
-
-// Konfiguracja dodatkowego logowania do pliku use.log
-const LOG_FILE = path.join(process.cwd(), 'use.log');
-
-/**
- * Zapisuje logi do pliku use.log oraz w konsoli
- *
- * @param {string} level - Poziom logowania (INFO, WARN, ERROR)
- * @param {string} category - Kategoria logu
- * @param {string} message - Wiadomość do zalogowania
- * @param {any} data - Dodatkowe dane do zalogowania (opcjonalnie)
- */
-function log_to_file(level: string, category: string, message: string, data?: any) {
-    const timestamp = new Date().toISOString();
-    const log_message = `[${timestamp}] [${level}] [${category}] ${message}`;
-    const log_entry = log_message + (data ? ` ${JSON.stringify(data, null, 2)}` : '');
-
-    // Loguj do konsoli
-    console.log(log_entry);
-
-    // Zapisz do pliku
-    try {
-        fs.appendFileSync(LOG_FILE, log_entry + '\n');
-    } catch (error) {
-        console.error(`Nie można zapisać do pliku logów: ${error}`);
-    }
-}
 
 /**
  * Pobiera listę dostępnych modeli OpenRouter
@@ -57,7 +25,7 @@ async function fetch_openrouter_models(): Promise<any[]> {
     };
 
     try {
-        log_to_file("INFO", "API_REQUEST", "Pobieranie modeli z OpenRouter API");
+        logger.info("API_REQUEST", "Pobieranie modeli z OpenRouter API");
         const response = await fetch(url, options);
 
         if (!response.ok) {
@@ -65,10 +33,10 @@ async function fetch_openrouter_models(): Promise<any[]> {
         }
 
         const data = await response.json();
-        log_to_file("INFO", "API_REQUEST", `Pobrano ${data.data?.length || 0} modeli z OpenRouter API`);
+        logger.info("API_REQUEST", `Pobrano ${data.data?.length || 0} modeli z OpenRouter API`);
         return data.data || [];
     } catch (error) {
-        log_to_file("ERROR", "API_ERROR", "Błąd podczas pobierania modeli z OpenRouter:", error);
+        logger.error("API_ERROR", "Błąd podczas pobierania modeli z OpenRouter:", error);
         return [];
     }
 }
@@ -76,11 +44,6 @@ async function fetch_openrouter_models(): Promise<any[]> {
 /**
  * Obsługuje żądania POST do API.
  * Przekazuje zapytanie do odpowiedniego dostawcy LLM i zwraca odpowiedź jako strumień SSE.
- *
- * Logika routingu:
- * - OpenAI -> Responses API (openai.responses.create)
- * - OpenRouter -> Chat Completions API (openai.chat.completions.create) z :online dla wyszukiwania
- * - Lokalne LLM -> Chat Completions API (openai.chat.completions.create)
  *
  * @param request - Żądanie HTTP zawierające parametry zapytania
  * @returns Strumień SSE z odpowiedzią modelu
@@ -96,15 +59,13 @@ export async function POST(request: Request) {
             webSearchConfig = {}
         } = await request.json();
 
-        log_to_file("INFO", "API_REQUEST", `Przetwarzanie zapytania:`, {
-            provider,
-            model,
-            webSearchEnabled,
-            messagesCount: messages.length
-        });
+        logger.info("API_REQUEST", `Przetwarzanie zapytania: Provider=${provider}, Model=${model}, Web Search=${webSearchEnabled}`);
 
         // Ładowanie listy modeli
         const models = await load_models();
+
+        // Zmienna do przechowywania faktycznie używanej nazwy modelu
+        let model_name = model;
 
         // Inicjalizacja klienta OpenAI z odpowiednimi ustawieniami
         const openai = new OpenAI({
@@ -112,157 +73,112 @@ export async function POST(request: Request) {
             baseURL: provider === "openrouter" ? "https://openrouter.ai/api/v1" : undefined
         });
 
-        // ========================== OBSŁUGA OPENAI - RESPONSES API ==========================
-        if (provider.toLowerCase() === "openai") {
-            log_to_file("INFO", "API_REQUEST", `Używanie OpenAI Responses API dla modelu: ${model}`);
+        // Obsługa wyszukiwania internetowego w zależności od dostawcy
+        if (webSearchEnabled) {
+            if (provider === "openai") {
+                // Zgodnie z najnowszą dokumentacją OpenAI, używamy specjalnych modeli z sufiksem -search-preview
+                // https://platform.openai.com/docs/guides/tools-web-search?api-mode=chat
 
-            // Przygotowanie wiadomości do formatu wymaganego przez Responses API
-            // Response API używa 'input' zamiast 'messages'
-            const input = messages;
-
-            // Przygotowanie narzędzi, w tym wyszukiwania internetowego jeśli włączone
-            const response_tools = [];
-
-            // Dodaj narzędzia jeśli są dostępne
-            if (Array.isArray(tools) && tools.length > 0) {
-                response_tools.push(...tools);
-            }
-
-            // Dodaj narzędzie wyszukiwania internetowego, jeśli jest włączone
-            if (webSearchEnabled) {
-                // Konfiguracja wyszukiwania internetowego dla Responses API
-                const web_search_config: any = {};
-
-                // Dodaj lokalizację użytkownika, jeśli dostępna
-                if (webSearchConfig.user_location) {
-                    web_search_config.user_location = webSearchConfig.user_location;
+                // Wybór odpowiedniego modelu wyszukiwania
+                let search_model = "gpt-4o-search-preview";
+                if (model.includes("mini")) {
+                    search_model = "gpt-4o-mini-search-preview";
                 }
 
-                // Dodaj rozmiar kontekstu wyszukiwania, jeśli dostępny
-                if (webSearchConfig.search_context_size) {
-                    web_search_config.search_context_size = webSearchConfig.search_context_size;
-                }
+                logger.info("API_REQUEST", `Używanie OpenAI Web Search API z modelem: ${search_model}`);
 
-                // Narzędzie wyszukiwania internetowego dla Responses API
-                const web_search_tool = {
-                    type: "web_search",
-                    config: web_search_config
-                };
+                // Przygotowanie konfiguracji lokalizacji użytkownika, jeśli jest dostępna
+                const user_location = webSearchConfig.user_location ? {
+                    type: "approximate" as const,
+                    approximate: {
+                        country: webSearchConfig.user_location.country || undefined,
+                        city: webSearchConfig.user_location.city || undefined,
+                        region: webSearchConfig.user_location.region || undefined
+                    }
+                } : undefined;
 
-                response_tools.push(web_search_tool);
-                log_to_file("INFO", "API_REQUEST", "Dodano narzędzie wyszukiwania internetowego dla Responses API", web_search_config);
-            }
-
-            // Konfiguracja dla Responses API
-            const request_config = {
-                model: model,
-                input,  // Responses API używa 'input' zamiast 'messages'
-                tools: response_tools.length > 0 ? response_tools : undefined,
-                stream: true,
-                parallel_tool_calls: response_tools.length > 1 ? true : undefined
-            };
-
-            log_to_file("INFO", "API_REQUEST", "Wywołanie OpenAI Responses API", {
-                model: request_config.model,
-                tools_count: response_tools.length,
-                web_search: webSearchEnabled
-            });
-
-            try {
-                // Wywołujemy responses.create zamiast chat.completions.create
-                const events = await openai.responses.create(request_config);
-                return create_responses_stream(events);
-            } catch (error) {
-                log_to_file("ERROR", "API_ERROR", "Błąd podczas wywołania Responses API:", error);
-
-                // Jeśli wystąpił błąd z Responses API, spróbuj użyć Chat Completions API jako fallback
-                log_to_file("WARN", "API_REQUEST", "Próba użycia Chat Completions API jako fallback");
-
-                const fallback_config: ChatCompletionCreateParamsStreaming = {
-                    model: "gpt-3.5-turbo", // Bezpieczny model fallback
+                // Konfiguracja dla OpenAI Chat Completions API z web_search_options
+                const request_config = {
+                    model: search_model,
                     messages,
-                    stream: true
+                    web_search_options: {
+                        user_location: user_location,
+                        search_context_size: (webSearchConfig.search_context_size as "low" | "medium" | "high") || "medium"
+                    },
+                    stream: true as const
                 };
 
-                const stream_response = await openai.chat.completions.create(fallback_config);
-                return create_chat_stream_response(stream_response);
+                logger.info("API_REQUEST", "Wywołanie OpenAI z parametrem web_search_options");
+                const response = await openai.chat.completions.create(request_config);
+                return create_stream_response(response);
+
+            } else if (provider === "openrouter") {
+                // Określenie nazwy modelu z sufiksem :online dla wyszukiwania internetowego
+                let router_model_name = model;
+                if (!router_model_name.endsWith(":online")) {
+                    router_model_name = `${router_model_name}:online`;
+                }
+
+                logger.info("API_REQUEST", `Używanie OpenRouter z modelem: ${router_model_name}`);
+
+                // Alternatywna metoda: użycie plugins z id: "web"
+                // const request_config = {
+                //     model: "openrouter/auto",
+                //     messages,
+                //     plugins: [{ id: "web" }],
+                //     stream: true
+                // };
+
+                // Konfiguracja dla OpenRouter z sufiksem :online
+                const request_config = {
+                    model: router_model_name,
+                    messages,
+                    stream: true as const
+                };
+
+                logger.info("API_REQUEST", "Wywołanie OpenRouter z modelem online");
+                // @ts-ignore - ignorujemy potencjalne problemy z typami
+                const response = await openai.chat.completions.create(request_config);
+                return create_stream_response(response);
             }
         }
-        // ========================== OBSŁUGA OPENROUTER - CHAT COMPLETIONS API ==========================
-        else if (provider.toLowerCase() === "openrouter") {
-            let model_name = model;
 
-            // Obsługa wyszukiwania internetowego przez dodanie sufiksu :online dla OpenRouter
-            if (webSearchEnabled && !model_name.endsWith(":online")) {
-                model_name = `${model_name}:online`;
-                log_to_file("INFO", "API_REQUEST", `Używanie OpenRouter z modelem: ${model_name} (wyszukiwanie internetowe)`);
+        // Standardowe wywołanie bez wyszukiwania internetowego
+        logger.info("API_REQUEST", "Standardowe wywołanie API bez wyszukiwania internetowego");
+
+        // Sprawdzenie, czy narzędzia zostały przekazane i czy są tablicą
+        const request_tools = Array.isArray(tools) && tools.length > 0 ? tools : undefined;
+
+        // Walidacja modelu - sprawdzenie czy istnieje
+        const model_exists = models.some(m => m.id === model);
+        if (!model_exists) {
+            logger.warn("API_REQUEST", `Model ${model} nie został znaleziony w dostępnych modelach. Używam modelu domyślnego.`);
+            if (provider === "openrouter") {
+                model_name = "gpt-4o-mini";
             } else {
-                log_to_file("INFO", "API_REQUEST", `Używanie OpenRouter z modelem: ${model_name}`);
+                model_name = "gpt-3.5-turbo";
             }
-
-            // Konfiguracja dla OpenRouter
-            const request_config = {
-                model: model_name,
-                messages,
-                stream: true
-            };
-
-            // Dodaj narzędzia tylko jeśli zostały zdefiniowane
-            const request_tools = Array.isArray(tools) && tools.length > 0 ? tools : undefined;
-            if (request_tools) {
-                // @ts-ignore - OpenRouter może obsługiwać narzędzia nieco inaczej
-                request_config.tools = request_tools;
-                // @ts-ignore
-                request_config.parallel_tool_calls = request_tools.length > 1 ? true : undefined;
-            }
-
-            log_to_file("INFO", "API_REQUEST", "Wywołanie OpenRouter Chat Completions API", {
-                model: request_config.model,
-                tools_present: !!request_tools,
-                web_search: webSearchEnabled
-            });
-
-            // @ts-ignore - ignorujemy potencjalne problemy z typami
-            const response = await openai.chat.completions.create(request_config);
-            return create_chat_stream_response(response);
+        } else {
+            model_name = model;
         }
-        // ========================== OBSŁUGA LOKALNYCH LLM - CHAT COMPLETIONS API ==========================
-        else {
-            log_to_file("INFO", "API_REQUEST", `Używanie lokalnego LLM: ${model}`);
 
-            // Walidacja modelu dla lokalnych LLM
-            const model_exists = models.some(m => m.id === model);
-            let model_name = model;
+        const request_config: ChatCompletionCreateParamsStreaming = {
+            model: model_name,
+            messages,
+            stream: true
+        };
 
-            if (!model_exists) {
-                log_to_file("WARN", "API_REQUEST", `Model ${model} nie został znaleziony. Używam modelu domyślnego.`);
-                model_name = "llama-3-8b"; // Domyślny model lokalny
-            }
-
-            // Konfiguracja dla Chat Completions API (lokalne LLM)
-            const request_config: ChatCompletionCreateParamsStreaming = {
-                model: model_name,
-                messages,
-                stream: true
-            };
-
-            // Dodaj narzędzia tylko jeśli zostały zdefiniowane
-            const request_tools = Array.isArray(tools) && tools.length > 0 ? tools : undefined;
-            if (request_tools) {
-                request_config.tools = request_tools;
-                request_config.parallel_tool_calls = request_tools.length > 1 ? true : false;
-            }
-
-            log_to_file("INFO", "API_REQUEST", "Wywołanie lokalnego LLM przez Chat Completions API", {
-                model: model_name,
-                tools_present: !!request_tools
-            });
-
-            const stream_response = await openai.chat.completions.create(request_config);
-            return create_chat_stream_response(stream_response);
+        // Dodaj narzędzia tylko jeśli zostały zdefiniowane
+        if (request_tools) {
+            request_config.tools = request_tools;
+            // Dodaj parallel_tool_calls tylko wtedy, gdy mamy narzędzia
+            request_config.parallel_tool_calls = false;
         }
+
+        const stream_response = await openai.chat.completions.create(request_config);
+        return create_stream_response(stream_response);
     } catch (error) {
-        log_to_file("ERROR", "API_ERROR", "Błąd w obsłudze zapytania POST:", error);
+        logger.error("API_ERROR", "Błąd w obsłudze zapytania POST:", error);
         return NextResponse.json(
             {
                 error: error instanceof Error ? error.message : "Nieznany błąd"
@@ -273,59 +189,21 @@ export async function POST(request: Request) {
 }
 
 /**
- * Tworzy odpowiedź strumieniową z OpenAI Responses API
+ * Tworzy odpowiedź strumieniową z odpowiedzi API
  *
- * @param events - Strumień zdarzeń z Responses API
+ * Funkcja przetwarza strumień danych z API LLM i konwertuje go do formatu SSE (Server-Sent Events),
+ * który może być następnie przesłany do klienta. W zależności od typu zawartości (zwykła wiadomość
+ * lub wywołanie narzędzia), odpowiednio oznacza zdarzenia.
+ *
+ * @param stream_response - Odpowiedź strumieniowa z API modelu językowego
  * @returns Odpowiedź HTTP z danymi strumieniowymi w formacie SSE
  */
-function create_responses_stream(events: any) {
-    const stream = new ReadableStream({
-        async start(controller) {
-            try {
-                for await (const event of events) {
-                    // Logowanie typu eventu z Responses API
-                    log_to_file("DEBUG", "STREAM", `Otrzymano event typu: ${event.type}`);
-
-                    // Wysyłanie wszystkich eventów do klienta
-                    const data = JSON.stringify({
-                        event: event.type,
-                        data: event,
-                    });
-
-                    controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
-                }
-                controller.close();
-            } catch (error) {
-                log_to_file("ERROR", "STREAM_ERROR", "Błąd w pętli strumieniowej Responses API:", error);
-                controller.error(error);
-            }
-        }
-    });
-
-    return new Response(stream, {
-        headers: {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive"
-        }
-    });
-}
-
-/**
- * Tworzy odpowiedź strumieniową z Chat Completions API
- *
- * Funkcja przetwarza strumień danych z Chat Completions API i konwertuje go do formatu SSE,
- * który może być następnie przesłany do klienta. Obsługuje różne typy zawartości.
- *
- * @param stream_response - Odpowiedź strumieniowa z Chat Completions API
- * @returns Odpowiedź HTTP z danymi strumieniowymi w formacie SSE
- */
-function create_chat_stream_response(stream_response: any) {
+function create_stream_response(stream_response: any) {
     const stream = new ReadableStream({
         async start(controller) {
             try {
                 for await (const chunk of stream_response) {
-                    // Sprawdzenie typu zawartości (wiadomość, wywołanie narzędzia, adnotacje)
+                    // Sprawdzenie czy odpowiedź zawiera adnotacje (cytaty URL)
                     const has_annotations = chunk.choices[0]?.delta?.annotations !== undefined;
                     const is_tool_call = chunk.choices[0]?.delta?.tool_calls !== undefined;
 
@@ -334,11 +212,6 @@ function create_chat_stream_response(stream_response: any) {
                         event_type = "tool_call";
                     } else if (has_annotations) {
                         event_type = "annotated_message";
-                    }
-
-                    // Logowanie typu chunka z Chat Completions API (tylko dla niektórych)
-                    if (is_tool_call || has_annotations) {
-                        log_to_file("DEBUG", "STREAM", `Przetwarzanie chunka z Chat Completions, typ: ${event_type}`);
                     }
 
                     const data = JSON.stringify({
@@ -350,7 +223,7 @@ function create_chat_stream_response(stream_response: any) {
                 }
                 controller.close();
             } catch (error) {
-                log_to_file("ERROR", "STREAM_ERROR", "Błąd w pętli strumieniowej Chat Completions:", error);
+                logger.error("STREAM_ERROR", "Błąd w pętli strumieniowej:", error);
                 controller.error(error);
             }
         }

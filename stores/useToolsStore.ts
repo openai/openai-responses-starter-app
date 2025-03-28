@@ -57,6 +57,14 @@ interface StoreState {
     currentProvider: string;
     setCurrentProvider: (provider: string) => void;
 
+    // Informacje o aktualnym modelu
+    selectedModel: string;
+    setSelectedModel: (model: string) => void;
+
+    // Dostępni dostawcy i ich modele
+    availableProviders: Record<string, string[]>;
+    setAvailableProviders: (providers: Record<string, string[]>) => void;
+
     // Metody aktualizacji informacji o dostawcy
     updateProviderInfo: (provider: string) => void;
 
@@ -65,6 +73,12 @@ interface StoreState {
 
     // Sprawdza czy provider wspiera wyszukiwanie internetowe
     isWebSearchSupported: () => boolean;
+
+    // Zwraca typ API dla aktualnie wybranego dostawcy
+    getApiType: () => "response" | "chat_completions";
+
+    // Zwraca typ wyszukiwania dla aktualnie wybranego dostawcy
+    getWebSearchType: () => "openai" | "openrouter" | null;
 }
 
 /**
@@ -90,6 +104,8 @@ const useToolsStore = create<StoreState>()(
 
             // Informacje o dostawcy
             currentProvider: "openai",
+            selectedModel: "gpt-4o-mini", // Domyślny model dla OpenAI
+            availableProviders: {}, // Początkowo pusta lista dostawców i ich modeli
 
             // Metody ustawiania stanu
             setFileSearchEnabled: (enabled) => {
@@ -162,7 +178,42 @@ const useToolsStore = create<StoreState>()(
             setCurrentProvider: (provider) => {
                 const previousProvider = get().currentProvider;
                 logger.info("TOOLS", `Zmiana dostawcy: ${previousProvider} -> ${provider}`);
+
+                // Pobierz dostępne modele dla nowego dostawcy
+                const availableModels = get().availableProviders[provider] || [];
+
+                // Ustaw pierwszy model z listy jako domyślny, jeśli są dostępne modele
+                if (availableModels.length > 0) {
+                    get().setSelectedModel(availableModels[0]);
+                }
+
                 set({ currentProvider: provider });
+
+                // Jeśli wyszukiwanie internetowe jest włączone, a nowy dostawca go nie obsługuje, wyłącz je
+                if (get().webSearchEnabled && !get().isWebSearchSupported()) {
+                    set({ webSearchEnabled: false });
+                    logger.warn("TOOLS", `Wyłączono wyszukiwanie internetowe dla nieobsługiwanego dostawcy: ${provider}`);
+                }
+            },
+
+            // Metoda do ustawiania wybranego modelu
+            setSelectedModel: (model) => {
+                const previousModel = get().selectedModel;
+                logger.info("TOOLS", `Zmiana modelu: ${previousModel} -> ${model}`);
+                set({ selectedModel: model });
+            },
+
+            // Metoda do ustawiania listy dostępnych dostawców i ich modeli
+            setAvailableProviders: (providers) => {
+                logger.info("TOOLS", `Aktualizacja listy dostępnych dostawców i modeli: ${JSON.stringify(providers)}`);
+                set({ availableProviders: providers });
+
+                // Jeśli aktualny dostawca nie jest już dostępny, użyj pierwszego z listy
+                const currentProvider = get().currentProvider;
+                if (!Object.keys(providers).includes(currentProvider) && Object.keys(providers).length > 0) {
+                    const newProvider = Object.keys(providers)[0];
+                    get().setCurrentProvider(newProvider);
+                }
             },
 
             // Aktualizacja informacji o dostawcy
@@ -184,6 +235,18 @@ const useToolsStore = create<StoreState>()(
                 const provider = get().currentProvider.toLowerCase();
                 // Obecnie tylko OpenAI i OpenRouter obsługują wyszukiwanie
                 return provider === "openai" || provider === "openrouter";
+            },
+
+            // Zwraca typ API dla aktualnie wybranego dostawcy
+            getApiType: () => {
+                const provider = get().currentProvider.toLowerCase();
+                return provider === "openai" ? "response" : "chat_completions";
+            },
+
+            // Zwraca typ wyszukiwania dla aktualnie wybranego dostawcy
+            getWebSearchType: () => {
+                const provider = get().currentProvider.toLowerCase();
+                return provider === "openai" ? "openai" : provider === "openrouter" ? "openrouter" : null;
             }
         }),
         {

@@ -5,9 +5,9 @@ import WebSearchConfig from "./websearch-config";
 import FunctionsView from "./functions-view";
 import PanelConfig from "./panel-config";
 import useToolsStore from "@/stores/useToolsStore";
-import { Switch } from "@/components/ui/switch";
 import logger from "@/lib/logger";
 import dynamic from "next/dynamic";
+import ProviderSelector from "./provider-selector";
 
 // Komponent selektora modeli (model-selector) jest importowany dynamicznie
 const ModelSelector = dynamic(() => import("./model-selector"), {
@@ -31,6 +31,10 @@ export default function ToolsPanel() {
         toggleWebSearch,
         toggleFunctions,
         currentProvider,
+        selectedModel,
+        setCurrentProvider,
+        setSelectedModel,
+        availableProviders,
         isWebSearchSupported
     } = useToolsStore();
 
@@ -135,19 +139,31 @@ export default function ToolsPanel() {
 
                     {/* Panel wyboru modelu */}
                     <PanelConfig
-                        title="Wybór modelu"
-                        tooltip="Pozwala na wybór modelu językowego"
+                        title="Dostawca i Model AI"
+                        tooltip="Pozwala na wybór dostawcy i modelu językowego"
                         enabled={true}
+                        setEnabled={() => {
+                            // Panel wyboru modelu jest zawsze włączony, więc ta funkcja nic nie robi
+                            logger.info("TOOLS", "Panel wyboru modelu jest zawsze włączony");
+                        }}
                     >
-                        <div className="p-3">
-                            <ModelSelector
-                                onProviderChange={(provider) => {
-                                    logger.info("MODEL_SELECTOR", `Zmiana dostawcy przez panel: ${provider}`);
-                                }}
-                                onModelChange={(model) => {
-                                    logger.info("MODEL_SELECTOR", `Zmiana modelu przez panel: ${model}`);
-                                }}
-                            />
+                        <div className="p-3 space-y-3">
+                            <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Dostawca</label>
+                                <ProviderSelector
+                                    provider={currentProvider}
+                                    onProviderChange={setCurrentProvider}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-gray-600 block mb-1">Model</label>
+                                <ModelSelector
+                                    provider={currentProvider}
+                                    model={selectedModel}
+                                    onModelChange={setSelectedModel}
+                                    models={availableProviders[currentProvider] || []}
+                                />
+                            </div>
                         </div>
                     </PanelConfig>
                 </div>
