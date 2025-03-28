@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ToolCall from "./tool-call";
 import Message from "./message";
-import Annotations from "./annotations";
 import { Item } from "@/lib/assistant";
 
 interface ChatProps {
@@ -29,30 +28,22 @@ const Chat: React.FC<ChatProps> = ({
 }) => {
     const items_end_ref = useRef<HTMLDivElement>(null);
     const [input_message_text, set_input_message_text] = useState<string>("");
-    // Ten stan jest używany, aby zapewnić lepszą obsługę dla IME, takich jak japońskie
     const [is_composing, set_is_composing] = useState(false);
 
-    /**
-     * Przewija widok czatu na sam dół
-     */
     const scroll_to_bottom = () => {
         items_end_ref.current?.scrollIntoView({ behavior: "instant" });
     };
 
-    /**
-     * Obsługuje naciśnięcie klawiszy w polu tekstowym
-     *
-     * @param event - Zdarzenie klawiatury
-     */
     const handle_key_down = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (event.key === "Enter" && !event.shiftKey && !is_composing) {
             event.preventDefault();
-            onSendMessage(input_message_text);
-            set_input_message_text("");
+            if (input_message_text.trim()) {
+                onSendMessage(input_message_text);
+                set_input_message_text("");
+            }
         }
     }, [onSendMessage, input_message_text, is_composing]);
 
-    // Przewijanie na dół przy nowych wiadomościach
     useEffect(() => {
         scroll_to_bottom();
     }, [items]);
@@ -69,13 +60,7 @@ const Chat: React.FC<ChatProps> = ({
                                 ) : item.type === "message" ? (
                                     <div className="flex flex-col gap-1">
                                         <Message message={item} />
-                                        {item.content &&
-                                            item.content[0].annotations &&
-                                            item.content[0].annotations.length > 0 && (
-                                                <Annotations
-                                                    annotations={item.content[0].annotations}
-                                                />
-                                            )}
+                                        {/* Adnotacje są już wyświetlane w komponencie Message */}
                                     </div>
                                 ) : null}
                             </React.Fragment>
@@ -104,12 +89,14 @@ const Chat: React.FC<ChatProps> = ({
                                         />
                                     </div>
                                     <button
-                                        disabled={!input_message_text}
+                                        disabled={!input_message_text.trim()}
                                         data-testid="send-button"
                                         className="flex size-8 items-end justify-center rounded-full bg-black text-white transition-colors hover:opacity-70 focus-visible:outline-none focus-visible:outline-black disabled:bg-[#D7D7D7] disabled:text-[#f4f4f4] disabled:hover:opacity-100"
                                         onClick={() => {
-                                            onSendMessage(input_message_text);
-                                            set_input_message_text("");
+                                            if (input_message_text.trim()) {
+                                                onSendMessage(input_message_text);
+                                                set_input_message_text("");
+                                            }
                                         }}
                                     >
                                         <svg

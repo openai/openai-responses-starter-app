@@ -137,6 +137,25 @@ export default function ToolsPanel() {
                         {functionsEnabled && <FunctionsView />}
                     </PanelConfig>
 
+                    {/* Status narzędzi w użyciu */}
+                    <div className="p-4 mt-2 bg-gray-50 rounded-lg border border-gray-100">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">Status narzędzi</h3>
+                        <ul className="text-xs space-y-2">
+                            <li className="flex items-center">
+                                <div className={`w-2 h-2 rounded-full mr-2 ${webSearchEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                <span>Wyszukiwanie internetowe: {webSearchEnabled ? 'włączone' : 'wyłączone'}</span>
+                            </li>
+                            <li className="flex items-center">
+                                <div className={`w-2 h-2 rounded-full mr-2 ${fileSearchEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                <span>Wyszukiwanie plików: {fileSearchEnabled ? 'włączone' : 'wyłączone'}</span>
+                            </li>
+                            <li className="flex items-center">
+                                <div className={`w-2 h-2 rounded-full mr-2 ${functionsEnabled ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                <span>Funkcje: {functionsEnabled ? 'włączone' : 'wyłączone'}</span>
+                            </li>
+                        </ul>
+                    </div>
+
                     {/* Panel wyboru modelu */}
                     <PanelConfig
                         title="Dostawca i Model AI"

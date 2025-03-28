@@ -131,12 +131,11 @@ async function load_models(): Promise<any[]> {
         ];
     }
 }
-
 export interface Provider {
     id: string;
     name: string;
     supportsWebSearch: boolean;
-    webSearchType?: 'responses' | 'api';
+    webSearchType?: 'responses' | 'api' | 'agnostic';
     models: string[];
 }
 
@@ -202,6 +201,12 @@ async function load_providers(): Promise<Record<string, Provider>> {
                 supportsWebSearch: true,
                 webSearchType: 'api',
                 models: ['gpt-4o-mini', 'claude-3-haiku']
+            },
+            local: {
+                id: 'local',
+                name: 'Lokalne LLM',
+                supportsWebSearch: false,
+                models: ['llama-3-8b', 'mixtral-8x7b']
             }
         };
     }

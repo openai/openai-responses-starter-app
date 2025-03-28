@@ -1,0 +1,47 @@
+// filepath: c:\Users\karol\Nowy folder\openai-responses-starter-app\.vscode\launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: pnpm run dev",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm run dev",
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "${url}",
+        "action": "debugWithEdge"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Edge: Debugowanie",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "userDataDir": "${workspaceFolder}/.vscode/edge-debug-profile",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*",
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///./~/*": "${webRoot}/node_modules/*",
+        "webpack:///_n_e/*": "${webRoot}/*"
+      },
+      "runtimeArgs": [
+        "--disable-web-security"
+      ],
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Next.js + Edge Debugger",
+      "configurations": ["Next.js: pnpm run dev", "Edge: Debugowanie"],
+      "stopAll": true
+    }
+  ]
+}

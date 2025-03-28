@@ -1,87 +1,42 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
+import { useAppContext } from "@/stores/AppProviderContext"; // Dodaj import
 
-interface ProviderSelectorProps {
-  provider: string;
-  onProviderChange: (provider: string) => void;
-}
+export default function ProviderSelector() {
+    // Użyj hooka useAppContext
+    const {
+        providers,
+        selectedProvider,
+        setSelectedProvider,
+        loading,
+        error,
+    } = useAppContext();
 
-export default function ProviderSelector({
-  provider,
-  onProviderChange,
-}: ProviderSelectorProps) {
-  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+    // Obsługa ładowania i błędów z kontekstu
+    if (loading) return <div>Ładowanie...</div>;
+    if (error) return <div>{error}</div>;
 
-  // Pobierz listę dostępnych dostawców
-  useEffect(() => {
-    const fetchProviders = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("/api/models/list");
-        if (!response.ok) {
-          throw new Error("Nie udało się pobrać listy dostawców");
-        }
-        
-        const data = await response.json();
-        const providers = Object.keys(data.models || {});
-        
-        setAvailableProviders(providers);
-        
-        // Jeśli aktualny dostawca nie jest dostępny, użyj pierwszego z listy
-        if (providers.length > 0 && !providers.includes(provider)) {
-          onProviderChange(providers[0]);
-        }
-      } catch (error) {
-        console.error("Błąd podczas pobierania listy dostawców:", error);
-        setAvailableProviders([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProviders();
-  }, [provider, onProviderChange]);
-
-  // Mapowanie nazw dostawców na bardziej przyjazne nazwy
-  const getProviderDisplayName = (providerName: string): string => {
-    const displayNames: Record<string, string> = {
-      openai: "OpenAI",
-      openrouter: "OpenRouter",
-      custom: "Custom LLM",
-    };
-    
-    return displayNames[providerName] || providerName;
-  };
-
-  return (
-    <div className="w-full">
-      <Select 
-        value={provider} 
-        onValueChange={onProviderChange}
-        disabled={isLoading || availableProviders.length === 0}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue 
-            placeholder={isLoading ? "Ładowanie dostawców..." : "Wybierz dostawcę"} 
-          />
-        </SelectTrigger>
-        <SelectContent>
-          {availableProviders.map((providerName) => (
-            <SelectItem key={providerName} value={providerName}>
-              {getProviderDisplayName(providerName)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
+    // Renderowanie Select z danymi z kontekstu
+    return (
+        <Select value={selectedProvider ?? ""} onValueChange={setSelectedProvider}>
+            <SelectTrigger>
+                <SelectValue placeholder="Wybierz providera" />
+            </SelectTrigger>
+            <SelectContent>
+                {providers.map((p) => (
+                    <SelectItem key={p} value={p}>
+                        {p}
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+    );
 }

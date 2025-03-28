@@ -1,63 +1,81 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Chat from "./chat";
 import useConversationStore from "@/stores/useConversationStore";
-import { Item, processMessages } from "@/lib/assistant";
+import { Item, streamMessages } from "@/lib/assistant";
+import useToolsStore from "@/stores/useToolsStore";
+import logger from "@/lib/logger";
 
-/**
- * Główny komponent asystenta, obsługujący konwersację z użytkownikiem
- *
- * @param provider - Dostawca modelu LLM (np. openai, anthropic)
- * @param model - Nazwa modelu do użycia (np. gpt-4o-mini, claude-3-haiku)
- * @returns Komponent React z interfejsem czatu
- */
 export default function Assistant({
     provider = "openai",
-    model = "gpt-4o-mini"
+    model = "gpt-4o-mini",
 }) {
-    const { chatMessages, addConversationItem, addChatMessage } =
-        useConversationStore();
+    const {
+        chatMessages,
+        addChatMessage,
+        addConversationItem,
+        appendToLastAssistantMessage,
+        addAssistantMessage,
+        addToolCall
+    } = useConversationStore();
 
-    // Stany lokalne dla wartości dostawcy i modelu
-    const [current_provider, set_current_provider] = useState(provider);
-    const [current_model, set_current_model] = useState(model);
+    const { webSearchEnabled } = useToolsStore();
+    const [currentProvider, setCurrentProvider] = useState(provider);
+    const [currentModel, setCurrentModel] = useState(model);
 
-    // Aktualizacja stanów lokalnych, gdy zmienią się propsy
     useEffect(() => {
-        if (provider !== current_provider) {
-            set_current_provider(provider);
-        }
-        if (model !== current_model) {
-            set_current_model(model);
-        }
-    }, [provider, model, current_provider, current_model]);
+        setCurrentProvider(provider);
+    }, [provider]);
 
-    /**
-     * Obsługuje wysłanie wiadomości przez użytkownika
-     *
-     * @param message - Tekst wiadomości od użytkownika
-     */
-    const handle_send_message = async (message: string) => {
+    useEffect(() => {
+        setCurrentModel(model);
+    }, [model]);
+
+    const handleSendMessage = async (message: string) => {
         if (!message.trim()) return;
 
-        const user_item: Item = {
+        const userItem: Item = {
             type: "message",
             role: "user",
             content: [{ type: "input_text", text: message.trim() }],
         };
-        const user_message: any = {
-            role: "user",
-            content: message.trim(),
-        };
+
+        addChatMessage(userItem);
+        addConversationItem({ role: "user", content: message });
+
+        // Start assistant message
+        const assistantMessageId = addAssistantMessage();
 
         try {
-            addConversationItem(user_message);
-            addChatMessage(user_item);
+            await streamMessages({
+                provider: currentProvider,
+                model: currentModel,
+                onToken: (token) => {
+                    // Usunięto zbędny log Console.log
+                    appendToLastAssistantMessage(token, assistantMessageId);
+                },
+                onToolCall: (toolCall) => {
+                    // Dodana obsługa narzędzi takich jak WebSearch
+                    if (toolCall.type === "web_search") {
+                        logger.info("TOOL_CALL", `Wywołanie wyszukiwania internetowego: ${toolCall.query}`);
 
-            // Przekazanie aktualnych parametrów provider i model do funkcji przetwarzającej wiadomości
-            await processMessages(current_provider, current_model);
-        } catch (error) {
-            console.error("Błąd podczas przetwarzania wiadomości:", error);
+                        const webSearchCall = {
+                            type: "tool_call",
+                            tool_type: "web_search_call",
+                            status: "searching",
+                            id: `websearch-${Date.now()}`,
+                            name: "web_search",
+                            arguments: JSON.stringify({ query: toolCall.query }),
+                            parsedArguments: { query: toolCall.query }
+                        };
+
+                        addToolCall(webSearchCall);
+                    }
+                }
+            });
+        } catch (err) {
+            console.error("Streaming error:", err);
+            appendToLastAssistantMessage("⚠️ Błąd podczas przetwarzania odpowiedzi", assistantMessageId);
         }
     };
 
@@ -65,10 +83,12 @@ export default function Assistant({
         <div className="h-full p-4 w-full bg-white rounded-lg shadow-sm">
             <Chat
                 items={chatMessages}
-                onSendMessage={handle_send_message}
-                providerName={current_provider}
-                modelName={current_model}
+                onSendMessage={handleSendMessage}
+                providerName={currentProvider}
+                modelName={currentModel}
             />
         </div>
     );
 }
+
+

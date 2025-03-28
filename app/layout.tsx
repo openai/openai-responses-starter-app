@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { AppProvider } from "@/stores/AppProviderContext";
 
 // Ładowanie fontów lokalnych
 const geist_sans = localFont({
@@ -60,7 +61,9 @@ export default function RootLayout({
                       * - flex-1 zapewnia, że main wypełni dostępną przestrzeń
                       * - overflow-hidden zapobiega pojawienie się paska przewijania
                     */}
-                    <main className="flex-1 overflow-hidden">{children}</main>
+                    <AppProvider>
+                        <main className="flex-1 overflow-hidden">{children}</main>
+                    </AppProvider>
                 </div>
             </body>
         </html>
