@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import { ToolCallItem } from "@/lib/assistant";
-import { BookOpenText, Clock, Globe, Loader2, Zap, CheckCircle, Search, XCircle } from "lucide-react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import SyntaxHighlighter from "react-syntax-highlighter";
 import { coy } from "react-syntax-highlighter/dist/esm/styles/prism";
-import useToolsStore from "@/stores/useToolsStore";
 import logger from "@/lib/logger";
+import { CheckCircle, XCircle, Loader2, Globe, Search } from "lucide-react";
+import useToolsStore from "@/stores/useToolsStore";
 
 interface ToolCallProps {
     toolCall: ToolCallItem;
@@ -31,11 +30,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
                                 <Loader2 size={16} className="animate-spin text-yellow-500" />
                             )}
                             <div className="text-sm font-medium">
-                                {toolCall.status === "completed"
-                                    ? `Wywołano funkcję ${toolCall.name}`
-                                    : toolCall.status === "failed"
-                                        ? `Błąd wywołania funkcji ${toolCall.name}`
-                                        : `Wywołuję funkcję ${toolCall.name}...`}
+                                {toolCall.name || "Funkcja"}
                             </div>
                             <div className="text-xs text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
                                 Funkcja
@@ -57,7 +52,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
                                 language="json"
                                 style={coy}
                             >
-                                {JSON.stringify(toolCall.parsedArguments, null, 2)}
+                                {toolCall.arguments || "{}"}
                             </SyntaxHighlighter>
                         </div>
                         <div className="max-h-96 overflow-y-scroll mx-6 p-2 text-xs">
@@ -69,16 +64,16 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
                                         padding: "8px",
                                         paddingLeft: "0px",
                                         marginTop: 0,
+                                        marginBottom: 0,
+                                        maxHeight: "300px",
                                     }}
                                     language="json"
                                     style={coy}
                                 >
-                                    {JSON.stringify(JSON.parse(toolCall.output), null, 2)}
+                                    {typeof toolCall.output === "string" ? toolCall.output : JSON.stringify(toolCall.output, null, 2)}
                                 </SyntaxHighlighter>
                             ) : (
-                                <div className="text-zinc-500 flex items-center gap-2 py-2">
-                                    <Clock size={16} className="animate-pulse" /> Oczekiwanie na wynik...
-                                </div>
+                                <div className="text-gray-400 italic">Oczekiwanie na wynik...</div>
                             )}
                         </div>
                     </div>
@@ -108,14 +103,11 @@ function FileSearchCell({ toolCall }: ToolCallProps) {
                                 <Loader2 size={16} className="animate-spin text-yellow-500" />
                             )}
                             <div className="text-sm font-medium">
-                                {toolCall.status === "completed"
-                                    ? "Przeszukano pliki"
-                                    : toolCall.status === "failed"
-                                        ? "Błąd wyszukiwania plików"
-                                        : "Przeszukuję pliki..."}
+                                Wyszukiwanie plików
                             </div>
                             <div className="text-xs text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
-                                Wyszukiwanie plików
+                                <Search size={12} className="inline mr-1" />
+                                Pliki
                             </div>
                         </div>
                     </div>
@@ -123,19 +115,10 @@ function FileSearchCell({ toolCall }: ToolCallProps) {
                     {toolCall.output && (
                         <div className="bg-[#fafafa] rounded-xl py-2 ml-4 mt-2">
                             <div className="max-h-96 overflow-y-scroll mx-6 p-2 text-xs">
-                                <div className="text-xs font-medium text-gray-500 mb-1">Wynik wyszukiwania:</div>
-                                <SyntaxHighlighter
-                                    customStyle={{
-                                        backgroundColor: "#fafafa",
-                                        padding: "8px",
-                                        paddingLeft: "0px",
-                                        marginTop: 0,
-                                    }}
-                                    language="json"
-                                    style={coy}
-                                >
-                                    {JSON.stringify(JSON.parse(toolCall.output), null, 2)}
-                                </SyntaxHighlighter>
+                                <div className="text-xs font-medium text-gray-500 mb-1">Znalezione pliki:</div>
+                                <pre className="whitespace-pre-wrap text-xs">
+                                    {typeof toolCall.output === "string" ? toolCall.output : JSON.stringify(toolCall.output, null, 2)}
+                                </pre>
                             </div>
                         </div>
                     )}
@@ -173,17 +156,14 @@ function WebSearchCell({ toolCall }: ToolCallProps) {
                             ) : toolCall.status === "failed" ? (
                                 <XCircle size={16} className="text-red-500" />
                             ) : (
-                                <Search size={16} className="animate-pulse text-yellow-500" />
+                                <Loader2 size={16} className="animate-spin text-yellow-500" />
                             )}
                             <div className="text-sm font-medium">
-                                {toolCall.status === "completed"
-                                    ? "Przeszukano Internet"
-                                    : toolCall.status === "failed"
-                                        ? "Błąd wyszukiwania internetowego"
-                                        : "Przeszukuję Internet..."}
+                                {providerName}
                             </div>
                             <div className="text-xs text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
-                                {providerName}
+                                <Globe size={12} className="inline mr-1" />
+                                Web
                             </div>
                         </div>
                     </div>
@@ -191,19 +171,29 @@ function WebSearchCell({ toolCall }: ToolCallProps) {
                     {toolCall.output && (
                         <div className="bg-[#fafafa] rounded-xl py-2 ml-4 mt-2">
                             <div className="max-h-96 overflow-y-scroll mx-6 p-2 text-xs">
-                                <div className="text-xs font-medium text-gray-500 mb-1">Wynik wyszukiwania:</div>
-                                <SyntaxHighlighter
-                                    customStyle={{
-                                        backgroundColor: "#fafafa",
-                                        padding: "8px",
-                                        paddingLeft: "0px",
-                                        marginTop: 0,
-                                    }}
-                                    language="json"
-                                    style={coy}
-                                >
-                                    {JSON.stringify(JSON.parse(toolCall.output), null, 2)}
-                                </SyntaxHighlighter>
+                                <div className="text-xs font-medium text-gray-500 mb-1">Wyniki wyszukiwania:</div>
+                                {Array.isArray(toolCall.output) ? (
+                                    <div className="space-y-3">
+                                        {toolCall.output.map((result: any, index: number) => (
+                                            <div key={index} className="border-b border-gray-200 pb-2 last:border-0">
+                                                <a 
+                                                    href={result.url || result.link} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="text-blue-500 hover:underline block mb-1"
+                                                >
+                                                    {result.title}
+                                                </a>
+                                                <div className="text-gray-700">{result.snippet || result.content}</div>
+                                                <div className="text-xs text-gray-500 mt-1">{result.url || result.link}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <pre className="whitespace-pre-wrap text-xs">
+                                        {typeof toolCall.output === "string" ? toolCall.output : JSON.stringify(toolCall.output, null, 2)}
+                                    </pre>
+                                )}
                             </div>
                         </div>
                     )}

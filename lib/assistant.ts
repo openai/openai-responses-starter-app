@@ -36,6 +36,9 @@ export interface ToolCallItem {
 
 export type Item = MessageItem | ToolCallItem;
 
+// Przechowuje ID ostatniej odpowiedzi, pozwala na śledzenie konwersacji w Responses API
+let lastResponseId: string | null = null;
+
 export const handleTurn = async (
     messages: any[],
     tools: any[],
@@ -48,41 +51,51 @@ export const handleTurn = async (
     try {
         logger.info("ASSISTANT_DEBUG", `Rozpoczęcie handleTurn: Provider=${provider}, Model=${model}, WebSearch=${webSearchEnabled}`);
         logger.info("ASSISTANT_DEBUG", `WebSearchConfig: ${JSON.stringify(webSearchConfig)}`);
-
+        
+        // Sprawdź czy używamy Responses API i dodaj previous_response_id, jeśli jest dostępne
+        const useResponsesApi = useToolsStore.getState().getApiType() === "response";
+        const apiConfig: any = {
+            messages,
+            tools,
+            provider,
+            model,
+            webSearchEnabled,
+            webSearchConfig,
+        };
+        
+        // Dodaj previous_response_id do zapytania, jeśli używamy Responses API
+        if (useResponsesApi && lastResponseId) {
+            apiConfig.previous_response_id = lastResponseId;
+            logger.info("ASSISTANT_DEBUG", `Używanie poprzedniego response_id: ${lastResponseId}`);
+        }
+        
         const response = await fetch("/api/turn_response", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                messages,
-                tools,
-                provider,
-                model,
-                webSearchEnabled,
-                webSearchConfig,
-            }),
+            body: JSON.stringify(apiConfig),
         });
-
+        
         if (!response.ok || !response.body) {
             logger.error("ASSISTANT_DEBUG", `Błąd odpowiedzi: ${response.status} ${response.statusText}`);
             return;
         }
-
+        
         logger.info("ASSISTANT_DEBUG", "Odpowiedź otrzymana, rozpoczęcie przetwarzania strumienia");
-
+        
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let done = false;
         let buffer = "";
-
+        
         while (!done) {
             const { value, done: doneReading } = await reader.read();
             done = doneReading;
             const chunkValue = decoder.decode(value);
             buffer += chunkValue;
-
+            
             const lines = buffer.split("\n\n");
             buffer = lines.pop() || "";
-
+            
             for (const line of lines) {
                 if (line.startsWith("data: ")) {
                     const dataStr = line.slice(6);
@@ -91,16 +104,31 @@ export const handleTurn = async (
                         done = true;
                         break;
                     }
+                    
                     try {
                         const data = JSON.parse(dataStr);
                         const eventType = data.event;
                         logger.info("ASSISTANT_DEBUG", `Otrzymano fragment danych typu: ${eventType}`);
-
-                        if (eventType === "message") {
+                        
+                        // Aktualizuj lastResponseId dla Responses API
+                        if (useResponsesApi && data.data?.id) {
+                            lastResponseId = data.data.id;
+                            logger.info("ASSISTANT_DEBUG", `Zaktualizowano response_id: ${lastResponseId}`);
+                        }
+                        
+                        if (eventType === "message_start") {
+                            // Obsługa początku wiadomości - tworzenie nowej wiadomości asystenta
+                            logger.info("ASSISTANT_DEBUG", "Początek wiadomości asystenta");
+                            useConversationStore.getState().addAssistantMessage();
+                        } else if (eventType === "message") {
                             const content = data.data?.choices?.[0]?.delta?.content || "";
                             if (content) {
                                 logger.info("ASSISTANT_DEBUG", `Treść wiadomości: "${content.length > 50 ? content.substring(0, 50) + '...' : content}"`);
+                                useConversationStore.getState().appendToAssistantMessage(content);
                             }
+                        } else if (eventType === "message_stop") {
+                            // Obsługa końca wiadomości
+                            logger.info("ASSISTANT_DEBUG", "Koniec wiadomości asystenta");
                         } else if (eventType === "tool_call") {
                             logger.info("ASSISTANT_DEBUG", `Wywołanie narzędzia: ${JSON.stringify(data.data?.choices?.[0]?.delta?.tool_calls || {})}`);
                             useConversationStore.getState().addToolCall?.(data.data);
@@ -118,7 +146,7 @@ export const handleTurn = async (
                                 }
                             }
                         }
-
+                        
                         onMessage(data);
                     } catch (err) {
                         logger.error("ASSISTANT_DEBUG", `Błąd parsowania danych: ${err}`);
@@ -126,7 +154,7 @@ export const handleTurn = async (
                 }
             }
         }
-
+        
         if (buffer && buffer.startsWith("data: ")) {
             logger.info("ASSISTANT_DEBUG", "Przetwarzanie końcowego bufora");
             const dataStr = buffer.slice(6);
@@ -134,16 +162,24 @@ export const handleTurn = async (
                 try {
                     const data = JSON.parse(dataStr);
                     logger.info("ASSISTANT_DEBUG", `Typ końcowych danych: ${data.event}`);
+                    
+                    // Aktualizuj lastResponseId dla Responses API
+                    if (useResponsesApi && data.data?.id) {
+                        lastResponseId = data.data.id;
+                        logger.info("ASSISTANT_DEBUG", `Zaktualizowano response_id: ${lastResponseId}`);
+                    }
+                    
                     if (data.event === "tool_call") {
                         useConversationStore.getState().addToolCall?.(data.data);
                     }
+                    
                     onMessage(data);
                 } catch (err) {
                     logger.error("ASSISTANT_DEBUG", `Błąd parsowania końcowego bufora: ${err}`);
                 }
             }
         }
-
+        
         logger.info("ASSISTANT_DEBUG", "Zakończenie przetwarzania odpowiedzi");
     } catch (error) {
         logger.error("ASSISTANT_DEBUG", `Błąd podczas przetwarzania zapytania: ${error}`);
@@ -163,18 +199,19 @@ export const streamMessages = async ({
 }) => {
     const { conversationItems } = useConversationStore.getState();
     const tools = getTools();
-
+    
     // Pobierz konfigurację wyszukiwania z useToolsStore
-    const { webSearchEnabled, webSearchConfig } = useToolsStore.getState();
-
-    logger.info("ASSISTANT_DEBUG", `Rozpoczęcie streamMessages: Provider=${provider}, Model=${model}`);
+    const { webSearchEnabled, webSearchConfig, getApiType } = useToolsStore.getState();
+    const isResponsesApi = getApiType() === "response";
+    
+    logger.info("ASSISTANT_DEBUG", `Rozpoczęcie streamMessages: Provider=${provider}, Model=${model}, API=${isResponsesApi ? "Responses" : "Chat Completions"}`);
     logger.info("ASSISTANT_DEBUG", `Liczba elementów konwersacji: ${conversationItems.length}`);
-
+    
     const allConversationItems = [
         { role: "developer", content: DEVELOPER_PROMPT },
         ...conversationItems,
     ];
-
+    
     await handleTurn(
         allConversationItems,
         tools,
@@ -186,26 +223,37 @@ export const streamMessages = async ({
                 }
             } else if (event === "tool_call") {
                 logger.info("ASSISTANT_DEBUG", `Otrzymano wywołanie narzędzia`);
-
+                
                 if (data?.choices?.[0]?.delta?.tool_calls) {
                     const toolCallsData = data.choices[0].delta.tool_calls;
-
+                    
                     for (const toolCall of toolCallsData) {
                         if (toolCall.function) {
                             if (toolCall.function.name && toolCall.function.arguments) {
                                 try {
                                     const args = parse(toolCall.function.arguments);
                                     const messageAssistantId = useConversationStore.getState().addAssistantMessage();
-
+                                    
                                     // Przekazujemy informacje o wywołaniu narzędzia do interfejsu użytkownika
-                                    if (onToolCall && (toolCall.function.name === "web_search" || toolCall.type === "web_search")) {
-                                        onToolCall({
-                                            type: "web_search",
-                                            query: args.query || "Wyszukiwanie w sieci...",
-                                            timestamp: new Date().toISOString()
-                                        });
+                                    if (onToolCall) {
+                                        // Sprawdź czy to wyszukiwanie internetowe
+                                        if (toolCall.function.name === "web_search" || toolCall.type === "web_search") {
+                                            onToolCall({
+                                                type: "web_search",
+                                                query: args.query || "Wyszukiwanie w sieci...",
+                                                timestamp: new Date().toISOString()
+                                            });
+                                        } else {
+                                            // Dla innych narzędzi
+                                            onToolCall({
+                                                type: "function_call",
+                                                name: toolCall.function.name,
+                                                arguments: args,
+                                                timestamp: new Date().toISOString()
+                                            });
+                                        }
                                     }
-
+                                    
                                     handleTool({
                                         name: toolCall.function.name,
                                         args,
@@ -223,7 +271,7 @@ export const streamMessages = async ({
                 if (annotations && annotations.length > 0) {
                     logger.info("ANNOTATION_DEBUG", `Otrzymano ${annotations.length} adnotacji w streamMessages`);
                     logger.info("ANNOTATION_DEBUG", `Szczegóły adnotacji: ${JSON.stringify(annotations)}`);
-
+                    
                     // Pobierz ID ostatniej wiadomości asystenta
                     const messageId = useConversationStore.getState().getLastAssistantMessageId();
                     if (messageId) {
@@ -241,4 +289,6 @@ export const streamMessages = async ({
         webSearchEnabled,
         webSearchConfig
     );
+    
+    logger.info("ASSISTANT_DEBUG", `Zakończenie streamMessages`);
 };
