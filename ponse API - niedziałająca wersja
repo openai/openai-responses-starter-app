@@ -1,0 +1,91 @@
+[33m48752a1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31mresponses-app/dev[m[33m, [m[1;31morigin/dev[m[33m, [m[1;32mnazwa_nowej_galezi_od_48752a1[m[33m)[m feat: Enhance annotation handling and message display
+app/api/turn_response/route.ts
+components/annotations.tsx
+components/message.tsx
+components/tool-call.tsx
+lib/assistant.ts
+lib/tools/tools-handling.ts
+lib/tools/tools.ts
+stores/useConversationStore.ts
+[33m852a594[m feat: add AppProviderContext for managing providers and loading state
+.vscode/launch.json
+app/api/turn_response/route.ts
+app/layout.tsx
+app/page.tsx
+changes.md
+components/annotations.tsx
+components/assistant.tsx
+components/chat.tsx
+components/message.tsx
+components/provider-selector.tsx
+components/tool-call.tsx
+components/tools-panel.tsx
+components/websearch-config.tsx
+eslint.config.mjs
+lib/assistant.ts
+lib/llm-providers/model_loader.ts
+lib/logger.ts
+package-lock.json
+package.json
+pnpm-lock.yaml
+stores/AppProviderContext.tsx
+stores/useConversationStore.ts
+tsconfig.json
+[33m7a5412e[m feat: Refactor ModelSelector and ToolsPanel for improved provider and model management
+app/api/turn_response/route.ts
+app/page.tsx
+components/file-upload.tsx
+components/model-selector.tsx
+components/tools-panel.tsx
+components/websearch-config.tsx
+lib/logger.ts
+lib/mcp/assistant-integration.ts
+lib/tools/tools.ts
+package.json
+pnpm-lock.yaml
+stores/useToolsStore.ts
+[33mc822c7b[m feat(tools-store): enhance web search functionality and provider management
+app/api/turn_response/route.ts
+app/page.tsx
+components/tools-panel.tsx
+components/ui/input.tsx
+components/ui/textarea.tsx
+components/websearch-config.tsx
+lib/llm-providers/model_loader.ts
+lib/logger.ts
+lib/tools/tools.ts
+next.config.mjs
+package.json
+pnpm-lock.yaml
+stores/useToolsStore.ts
+[33m357f6d0[m fix: naprawienie błędów typów i implementacja selektorów
+components/model-selector.tsx
+components/provider-selector.tsx
+[33m9772ce8[m refactor: improve type definitions and enhance streaming response handling in POST API
+app/api/turn_response/route.ts
+[33m02714fe[m Refactor useToolsStore: Add toggle methods for tool states and improve state management
+CLAUDE.md
+app/api/models/list/route.ts
+app/api/turn_response/route.ts
+app/layout.tsx
+app/page.tsx
+codemcp.toml
+components/assistant.tsx
+components/chat.tsx
+components/file-upload.tsx
+components/model-selector.tsx
+components/tools-panel.tsx
+components/ui/label.tsx
+components/ui/select.tsx
+components/ui/switch.tsx
+lib/assistant.ts
+lib/llm-providers/interfaces.ts
+lib/llm-providers/model_loader.ts
+lib/tools/tools.ts
+package-lock.json
+package.json
+pnpm-lock.yaml
+stores/useToolsStore.ts
+[33m69851e1[m fix: naprawienie błędów typów i implementacja selektorów
+app/api/turn_response/route.ts
+components/assistant.tsx
