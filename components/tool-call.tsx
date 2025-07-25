@@ -178,7 +178,10 @@ function CodeInterpreterCell({ toolCall }: ToolCallProps) {
             </div>
           </div>
         </div>
-        <div className="bg-[#fafafa] rounded-xl py-2 ml-4 mt-2">
+        <div 
+          className="bg-[#fafafa] rounded-xl py-2 ml-4 mt-2" 
+          hidden={open}
+        >
           <div className="mx-6 p-2 text-xs">
             <SyntaxHighlighter
               customStyle={{
