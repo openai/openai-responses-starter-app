@@ -1,22 +1,16 @@
 import { getDeveloperPrompt, MODEL } from "@/config/constants";
-import { NextResponse } from "next/server";
+import { getTools } from "@/lib/tools/tools";
 import OpenAI from "openai";
-import { getFreshAccessToken } from "@/lib/googleTokens";
-import { withGoogleConnector } from "@/lib/tools/connectors";
 
 export async function POST(request: Request) {
   try {
-    const { messages, tools, googleIntegrationEnabled } = await request.json();
+    const { messages, toolsState } = await request.json();
+
+    const tools = await getTools(toolsState);
+
+    console.log("Tools:", tools);
+
     console.log("Received messages:", messages);
-
-    // Get fresh tokens (refresh if near expiry or missing access token when refresh exists)
-    const { accessToken } = await getFreshAccessToken();
-
-    // Build tools list, conditionally adding the Google Calendar connector via MCP
-    const toolsWithConnector = withGoogleConnector(
-      Array.isArray(tools) ? tools : [],
-      { enabled: Boolean(googleIntegrationEnabled), accessToken }
-    );
 
     const openai = new OpenAI();
 
@@ -24,7 +18,7 @@ export async function POST(request: Request) {
       model: MODEL,
       input: messages,
       instructions: getDeveloperPrompt(),
-      tools: toolsWithConnector as any,
+      tools,
       stream: true,
       parallel_tool_calls: false,
     });
@@ -59,10 +53,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error in POST handler:", error);
-    return NextResponse.json(
-      {
+    return new Response(
+      JSON.stringify({
         error: error instanceof Error ? error.message : "Unknown error",
-      },
+      }),
       { status: 500 }
     );
   }

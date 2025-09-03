@@ -9,7 +9,6 @@ export default function WebSearchSettings() {
   const { webSearchConfig, setWebSearchConfig } = useToolsStore();
 
   const handleClear = () => {
-    console.log("Clearing web search config", webSearchConfig);
     setWebSearchConfig({
       user_location: {
         type: "approximate",

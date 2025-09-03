@@ -30,6 +30,18 @@ export type McpConfig = {
   skip_approval: boolean;
 };
 
+export interface ToolsState {
+  webSearchEnabled: boolean;
+  fileSearchEnabled: boolean;
+  functionsEnabled: boolean;
+  codeInterpreterEnabled: boolean;
+  vectorStore: VectorStore;
+  webSearchConfig: WebSearchConfig;
+  mcpEnabled: boolean;
+  mcpConfig: McpConfig;
+  googleIntegrationEnabled: boolean;
+}
+
 interface StoreState {
   fileSearchEnabled: boolean;
   //previousFileSearchEnabled: boolean;

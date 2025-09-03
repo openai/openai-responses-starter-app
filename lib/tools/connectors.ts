@@ -1,15 +1,6 @@
-export type GoogleConnectorOptions = {
-  enabled: boolean;
-  accessToken?: string;
-};
-
-export function withGoogleConnector(
-  tools: any[],
-  { enabled, accessToken }: GoogleConnectorOptions
-): any[] {
-  if (!enabled || !accessToken) return tools;
+export function getGoogleConnectorTools(accessToken: string): any[] {
+  if (!accessToken) return [];
   return [
-    ...tools,
     {
       type: "mcp",
       server_label: "GoogleCalendar",

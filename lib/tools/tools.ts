@@ -1,11 +1,13 @@
 import { toolsList } from "../../config/tools-list";
-import useToolsStore from "@/stores/useToolsStore";
-import { WebSearchConfig } from "@/stores/useToolsStore";
+import { ToolsState, WebSearchConfig } from "@/stores/useToolsStore";
+import { getFreshAccessToken } from "@/lib/connectors-auth";
+import { getGoogleConnectorTools } from "./connectors";
 
 interface WebSearchTool extends WebSearchConfig {
   type: "web_search";
 }
-export const getTools = () => {
+
+export const getTools = async (toolsState: ToolsState) => {
   const {
     webSearchEnabled,
     fileSearchEnabled,
@@ -15,7 +17,8 @@ export const getTools = () => {
     webSearchConfig,
     mcpEnabled,
     mcpConfig,
-  } = useToolsStore.getState();
+    googleIntegrationEnabled,
+  } = toolsState;
 
   const tools = [];
 
@@ -84,7 +87,11 @@ export const getTools = () => {
     tools.push(mcpTool);
   }
 
-  console.log("tools", tools);
+  if (googleIntegrationEnabled) {
+    // Get fresh tokens (refresh if near expiry or missing access token when refresh exists)
+    const { accessToken } = await getFreshAccessToken();
+    tools.push(...getGoogleConnectorTools(accessToken!));
+  }
 
   return tools;
 };
