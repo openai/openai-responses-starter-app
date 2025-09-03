@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
 
-const SESSION_COOKIE = "gc_session_id";
+const SESSION_COOKIE = "responses_starter_session_id";
 
 // Simple in-memory storage for demo purposes only.
 // In production, replace with a persistent/session store.

@@ -16,7 +16,7 @@ export function withGoogleConnector(
       server_description: "Search the user's calendar and read calendar events",
       connector_id: "connector_googlecalendar",
       authorization: accessToken,
-      // Defaults to requiring approval; this demo disables prompts for approval
+      // change this to "always" if you want to require approval
       require_approval: "never",
     },
     {
@@ -25,7 +25,7 @@ export function withGoogleConnector(
       server_description: "Search the user's email inbox and read emails",
       connector_id: "connector_gmail",
       authorization: accessToken,
-      // Defaults to requiring approval; this demo disables prompts for approval
+      // change this to "always" if you want to require approval
       require_approval: "never",
     },
   ];
