@@ -161,15 +161,11 @@ function McpCallCell({ toolCall }: ToolCallProps) {
 }
 
 function CodeInterpreterCell({ toolCall }: ToolCallProps) {
-  const [open, setOpen] = React.useState(false);
   return (
     <div className="flex flex-col w-[70%] relative mb-[-8px]">
       <div className="flex flex-col text-sm rounded-[16px]">
         <div className="font-semibold p-3 pl-0 text-gray-700 rounded-b-none flex gap-2">
-          <div
-            className="flex gap-2 items-center text-blue-500 ml-[-8px] cursor-pointer"
-            onClick={() => setOpen(!open)}
-          >
+          <div className="flex gap-2 items-center text-blue-500 ml-[-8px]">
             <Code2 size={16} />
             <div className="text-sm font-medium">
               {toolCall.status === "completed"
@@ -199,7 +195,13 @@ function CodeInterpreterCell({ toolCall }: ToolCallProps) {
             {toolCall.files.map((f) => (
               <a
                 key={f.file_id}
-                href={`/api/container_files/content?file_id=${f.file_id}${f.container_id ? `&container_id=${f.container_id}` : ""}${f.filename ? `&filename=${encodeURIComponent(f.filename)}` : ""}`}
+                href={`/api/container_files/content?file_id=${f.file_id}${
+                  f.container_id ? `&container_id=${f.container_id}` : ""
+                }${
+                  f.filename
+                    ? `&filename=${encodeURIComponent(f.filename)}`
+                    : ""
+                }`}
                 download
                 className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#ededed] text-xs text-zinc-500"
               >
