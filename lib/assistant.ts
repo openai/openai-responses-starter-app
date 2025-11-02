@@ -10,6 +10,122 @@ const normalizeAnnotation = (annotation: any): Annotation => ({
   fileId: annotation.file_id ?? annotation.fileId,
   containerId: annotation.container_id ?? annotation.containerId,
 });
+const findReasoningItem = (
+  chatMessages: Item[],
+  id: string
+): ReasoningItem | undefined =>
+  chatMessages.find(
+    (m) => m.type === "reasoning" && (m as ReasoningItem).id === id
+  ) as ReasoningItem | undefined;
+
+const ensureReasoningItem = (
+  chatMessages: Item[],
+  id: string
+): ReasoningItem => {
+  let reasoningItem = findReasoningItem(chatMessages, id);
+
+  if (!reasoningItem) {
+    reasoningItem = {
+      type: "reasoning",
+      id,
+      status: "in_progress",
+      summaries: {},
+      texts: {},
+    };
+    chatMessages.push(reasoningItem);
+  }
+
+  return reasoningItem;
+};
+
+const setReasoningStatus = (
+  reasoningItem: ReasoningItem,
+  status: ReasoningItem["status"]
+) => {
+  if (reasoningItem.status !== status) {
+    reasoningItem.status = status;
+  }
+};
+
+const applySummaryArray = (
+  reasoningItem: ReasoningItem,
+  summary: any[] | undefined
+) => {
+  if (!Array.isArray(summary)) {
+    return;
+  }
+  summary.forEach((entry, index) => {
+    if (entry && typeof entry.text === "string") {
+      reasoningItem.summaries[index] = entry.text;
+    }
+  });
+};
+
+const appendSummaryDelta = (
+  reasoningItem: ReasoningItem,
+  index: number,
+  delta: string
+) => {
+  if (!delta) return;
+  const previous = reasoningItem.summaries[index] ?? "";
+  reasoningItem.summaries[index] = `${previous}${delta}`;
+};
+
+const setSummaryText = (
+  reasoningItem: ReasoningItem,
+  index: number,
+  text: string
+) => {
+  reasoningItem.summaries[index] = text;
+};
+
+
+const removeReasoningItem = (
+  chatMessages: Item[],
+  id: string
+) => {
+  const reasoningIndex = chatMessages.findIndex(
+    (m) => m.type === "reasoning" && (m as ReasoningItem).id === id
+  );
+
+  if (reasoningIndex !== -1) {
+    chatMessages.splice(reasoningIndex, 1);
+    return true;
+  }
+
+  return false;
+};
+
+const clearReasoningItems = (chatMessages: Item[]) => {
+  let removed = false;
+  for (let i = chatMessages.length - 1; i >= 0; i -= 1) {
+    if (chatMessages[i]?.type === "reasoning") {
+      chatMessages.splice(i, 1);
+      removed = true;
+    }
+  }
+  return removed;
+};
+
+const appendReasoningTextDelta = (
+  reasoningItem: ReasoningItem,
+  index: number,
+  delta: string
+) => {
+  if (!delta) {
+    return;
+  }
+  const previous = reasoningItem.texts[index] ?? "";
+  reasoningItem.texts[index] = `${previous}${delta}`;
+};
+
+const setReasoningText = (
+  reasoningItem: ReasoningItem,
+  index: number,
+  text: string
+) => {
+  reasoningItem.texts[index] = text;
+};
 
 export interface ContentItem {
   type: "input_text" | "output_text" | "refusal" | "output_audio";
@@ -65,11 +181,20 @@ export interface McpApprovalRequestItem {
   arguments?: string;
 }
 
+export interface ReasoningItem {
+  type: "reasoning";
+  id: string;
+  status: "in_progress" | "completed" | "incomplete";
+  summaries: Record<number, string>;
+  texts: Record<number, string>;
+}
+
 export type Item =
   | MessageItem
   | ToolCallItem
   | McpListToolsItem
-  | McpApprovalRequestItem;
+  | McpApprovalRequestItem
+  | ReasoningItem;
 
 export const handleTurn = async (
   messages: any[],
@@ -161,6 +286,7 @@ export const processMessages = async () => {
         case "response.output_text.delta":
         case "response.output_text.annotation.added": {
           const { delta, item_id, annotation } = data;
+          clearReasoningItems(chatMessages);
 
           let partial = "";
           if (typeof delta === "string") {
@@ -243,6 +369,18 @@ export const processMessages = async () => {
               setConversationItems([...conversationItems]);
               break;
             }
+            case "reasoning": {
+              if (!item?.id) {
+                break;
+              }
+              const reasoningItem = ensureReasoningItem(chatMessages, item.id);
+              applySummaryArray(reasoningItem, item.summary);
+              if (item.status) {
+                setReasoningStatus(reasoningItem, item.status);
+              }
+              setChatMessages([...chatMessages]);
+              break;
+            }
             case "function_call": {
               functionArguments += item.arguments || "";
               chatMessages.push({
@@ -310,8 +448,20 @@ export const processMessages = async () => {
         }
 
         case "response.output_item.done": {
-          // After output item is done, adding tool call ID
           const { item } = data || {};
+          if (!item || !item.type) {
+            break;
+          }
+
+          if (item.type === "reasoning") {
+            if (item.id) {
+              removeReasoningItem(chatMessages, item.id);
+              setChatMessages([...chatMessages]);
+            }
+            break;
+          }
+
+          // After non-reasoning output item is done, adding tool call ID
           const toolCallMessage = chatMessages.find((m) => m.id === item.id);
           if (toolCallMessage && toolCallMessage.type === "tool_call") {
             toolCallMessage.call_id = item.call_id;
@@ -433,10 +583,15 @@ export const processMessages = async () => {
 
         case "response.web_search_call.completed": {
           const { item_id, output } = data;
+          const reasoningCleared = clearReasoningItems(chatMessages);
+          let updated = false;
           const toolCallMessage = chatMessages.find((m) => m.id === item_id);
           if (toolCallMessage && toolCallMessage.type === "tool_call") {
             toolCallMessage.output = output;
             toolCallMessage.status = "completed";
+            updated = true;
+          }
+          if (reasoningCleared || updated) {
             setChatMessages([...chatMessages]);
           }
           break;
@@ -448,6 +603,114 @@ export const processMessages = async () => {
           if (toolCallMessage && toolCallMessage.type === "tool_call") {
             toolCallMessage.output = output;
             toolCallMessage.status = "completed";
+            setChatMessages([...chatMessages]);
+          }
+          break;
+        }
+
+        case "response.reasoning_summary_part.added": {
+          const { item_id, part, summary_index } = data;
+          if (!item_id) {
+            break;
+          }
+          const reasoningItem = ensureReasoningItem(chatMessages, item_id);
+          setReasoningStatus(reasoningItem, "in_progress");
+          if (part?.type === "summary_text" && typeof part.text === "string") {
+            setSummaryText(
+              reasoningItem,
+              typeof summary_index === "number" ? summary_index : 0,
+              part.text
+            );
+          }
+          setChatMessages([...chatMessages]);
+          break;
+        }
+
+        case "response.reasoning_summary_text.delta": {
+          const { item_id, summary_index, delta } = data;
+          if (!item_id || typeof delta !== "string") {
+            break;
+          }
+          const reasoningItem = ensureReasoningItem(chatMessages, item_id);
+          appendSummaryDelta(
+            reasoningItem,
+            typeof summary_index === "number" ? summary_index : 0,
+            delta
+          );
+          setChatMessages([...chatMessages]);
+          break;
+        }
+
+        case "response.reasoning_summary_text.done": {
+          const { item_id, summary_index, text } = data;
+          if (!item_id || typeof text !== "string") {
+            break;
+          }
+          const reasoningItem = ensureReasoningItem(chatMessages, item_id);
+          setSummaryText(
+            reasoningItem,
+            typeof summary_index === "number" ? summary_index : 0,
+            text
+          );
+          setChatMessages([...chatMessages]);
+          break;
+        }
+
+        case "response.reasoning_text.delta": {
+          const { item_id, content_index, delta } = data;
+          if (!item_id || typeof delta !== "string") {
+            break;
+          }
+          const reasoningItem = ensureReasoningItem(chatMessages, item_id);
+          appendReasoningTextDelta(
+            reasoningItem,
+            typeof content_index === "number" ? content_index : 0,
+            delta
+          );
+          setChatMessages([...chatMessages]);
+          break;
+        }
+
+        case "response.reasoning_text.done": {
+          const { item_id, content_index, text } = data;
+          if (!item_id || typeof text !== "string") {
+            break;
+          }
+          const reasoningItem = ensureReasoningItem(chatMessages, item_id);
+          setReasoningText(
+            reasoningItem,
+            typeof content_index === "number" ? content_index : 0,
+            text
+          );
+          setChatMessages([...chatMessages]);
+          break;
+        }
+
+        case "response.reasoning_summary_part.done": {
+          const { item_id, summary_index, part } = data;
+          if (!item_id) {
+            break;
+          }
+          const reasoningItem = ensureReasoningItem(chatMessages, item_id);
+          if (part?.type === "summary_text" && typeof part.text === "string") {
+            setSummaryText(
+              reasoningItem,
+              typeof summary_index === "number" ? summary_index : 0,
+              part.text
+            );
+          }
+          setReasoningStatus(reasoningItem, "completed");
+          const removed = removeReasoningItem(chatMessages, item_id);
+          if (removed) {
+            setChatMessages([...chatMessages]);
+          }
+          break;
+        }
+
+        case "searched_web":
+        case "response.web_search_call.searched": {
+          const removed = clearReasoningItems(chatMessages);
+          if (removed) {
             setChatMessages([...chatMessages]);
           }
           break;
@@ -508,7 +771,21 @@ export const processMessages = async () => {
         case "response.completed": {
           console.log("response completed", data);
           const { response } = data;
-
+          let reasoningUpdated = false;
+          if (response?.output) {
+            for (const outputItem of response.output as any[]) {
+              if (outputItem?.type === "reasoning" && outputItem?.id) {
+                const existing = findReasoningItem(chatMessages, outputItem.id);
+                if (existing) {
+                  applySummaryArray(existing, outputItem.summary);
+                  if (outputItem.status) {
+                    setReasoningStatus(existing, outputItem.status);
+                  }
+                  reasoningUpdated = true;
+                }
+              }
+            }
+          }
           // Handle MCP tools list (append all lists, not just the first)
           const mcpListToolsMessages = response.output.filter(
             (m: Item) => m.type === "mcp_list_tools"
@@ -542,6 +819,24 @@ export const processMessages = async () => {
             setChatMessages([...chatMessages]);
           }
 
+          if (reasoningUpdated) {
+            setChatMessages([...chatMessages]);
+          }
+
+          break;
+        }
+
+        case "reasoning": {
+          if (data?.id) {
+            const existing = findReasoningItem(chatMessages, data.id);
+            if (existing) {
+              applySummaryArray(existing, data.summary);
+              if (data.status) {
+                setReasoningStatus(existing, data.status);
+              }
+              setChatMessages([...chatMessages]);
+            }
+          }
           break;
         }
 

@@ -6,7 +6,8 @@ import Message from "./message";
 import Annotations from "./annotations";
 import McpToolsList from "./mcp-tools-list";
 import McpApproval from "./mcp-approval";
-import { Item, McpApprovalRequestItem } from "@/lib/assistant";
+import Reasoning from "./reasoning";
+import { Item, McpApprovalRequestItem, ReasoningItem } from "@/lib/assistant";
 import LoadingMessage from "./loading-message";
 import useConversationStore from "@/stores/useConversationStore";
 
@@ -66,6 +67,8 @@ const Chat: React.FC<ChatProps> = ({
                         />
                       )}
                   </div>
+                ) : item.type === "reasoning" ? (
+                  <Reasoning item={item as ReasoningItem} />
                 ) : item.type === "mcp_list_tools" ? (
                   <McpToolsList item={item} />
                 ) : item.type === "mcp_approval_request" ? (

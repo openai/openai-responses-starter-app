@@ -58,7 +58,7 @@ const Reasoning: React.FC<ReasoningProps> = ({ item }) => {
             {hasSummary ? (
               <ReactMarkdown>{summaryText}</ReactMarkdown>
             ) : (
-              <span className="text-stone-400">考え中...</span>
+              <span className="text-stone-400">Reasoning...</span>
             )}
           </div>
           {hasDetails && (
