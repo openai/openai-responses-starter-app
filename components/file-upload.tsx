@@ -131,7 +131,7 @@ export default function FileUpload({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            storeName: newStoreName,
+            name: newStoreName,
           }),
         });
         if (!createResponse.ok) {
