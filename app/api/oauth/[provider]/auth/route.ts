@@ -80,7 +80,7 @@ export async function GET(
     const authorizationUrl = `${cfg.authorizeUrl}?${authParams.toString()}`;
     return NextResponse.redirect(authorizationUrl);
   } catch (error: any) {
-    console.error(`OAuth Auth Error (${provider}):`, error);
+    await logError(error, `OAuth Auth Error (${provider})`, { host });
     return NextResponse.json({ error: error.message || "Failed to initialize auth" }, { status: 500 });
   }
 }

@@ -126,7 +126,7 @@ export async function GET(
 
     return NextResponse.redirect(redirectUrl.toString());
   } catch (error: any) {
-    console.error(`OAuth Callback Error (${provider}):`, error);
+    await logError(error, `OAuth Callback Error (${provider})`, { host });
     return NextResponse.redirect(new URL("/?error=oauth_failed", request.url));
   }
 }
