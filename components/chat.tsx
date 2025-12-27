@@ -60,7 +60,7 @@ const Chat: React.FC<ChatProps> = ({
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-primary/20">
                 <Brain size={36} className="text-primary-foreground" />
               </div>
-              <h2 className="text-2xl font-bold tracking-tight mb-2">TacticDev Gen Intel</h2>
+              <h2 className="text-2xl font-bold tracking-tight mb-2">TacticDev GenTel™</h2>
               <p className="text-muted-foreground max-w-[400px]">
                 {INITIAL_MESSAGE}
               </p>
@@ -136,7 +136,7 @@ const Chat: React.FC<ChatProps> = ({
                       tabIndex={0}
                       dir="auto"
                       rows={1}
-                      placeholder="Message TacticDev Gen Intel..."
+                      placeholder="Message TacticDev GenTel™..."
                       className="min-h-[44px] max-h-[200px] resize-none border-0 focus:outline-none text-sm bg-transparent px-0 py-3 text-foreground placeholder:text-muted-foreground/70"
                       value={inputMessageText}
                       onChange={(e) => {

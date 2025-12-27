@@ -65,9 +65,9 @@ export function getGithubRedirectUri(host?: string): string {
   }
   if (host) {
     const protocol = host.includes("localhost") ? "http" : "https";
-    return `${protocol}://${host}/api/github/callback`;
+    return `${protocol}://${host}/api/oauth/github/callback`;
   }
-  return GITHUB_REDIRECT_URI || "http://localhost:3000/api/github/callback";
+  return GITHUB_REDIRECT_URI || "http://localhost:3000/api/oauth/github/callback";
 }
 
 export async function getGithubAccessToken(): Promise<string | undefined> {
@@ -109,9 +109,9 @@ export function getRedirectUri(host?: string): string {
   }
   if (host) {
     const protocol = host.includes("localhost") ? "http" : "https";
-    return `${protocol}://${host}/api/google/callback`;
+    return `${protocol}://${host}/api/oauth/google/callback`;
   }
-  return GOOGLE_REDIRECT_URI || "http://localhost:3000/api/google/callback";
+  return GOOGLE_REDIRECT_URI || "http://localhost:3000/api/oauth/google/callback";
 }
 
 // Refresh when close to expiry (30s) or when missing access token but we have a refresh token

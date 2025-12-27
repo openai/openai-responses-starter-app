@@ -51,7 +51,7 @@ export default function Main() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Brain size={18} className="text-primary-foreground" />
             </div>
-            <h1 className="font-semibold text-sm">TacticDev Gen Intel</h1>
+            <h1 className="font-semibold text-sm">TacticDev GenTel™</h1>
           </div>
           <div className="flex items-center gap-2">
             <button 
@@ -88,7 +88,7 @@ export default function Main() {
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Brain size={18} className="text-primary" />
-                  <h3 className="font-semibold">Gen Intel</h3>
+                  <h3 className="font-semibold">GenTel™</h3>
                 </div>
                 <button 
                   onClick={() => setIsToolsPanelOpen(false)}

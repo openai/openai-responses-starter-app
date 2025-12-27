@@ -37,12 +37,12 @@ export default function ContextPanel() {
   const [githubOauthConfigured, setGithubOauthConfigured] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    fetch("/api/google/status")
+    fetch("/api/oauth/google/status")
       .then((r) => r.json())
       .then((d) => setOauthConfigured(Boolean(d.oauthConfigured)))
       .catch(() => setOauthConfigured(false));
 
-    fetch("/api/github/status")
+    fetch("/api/oauth/github/status")
       .then((r) => r.json())
       .then((d) => setGithubOauthConfigured(Boolean(d.oauthConfigured)))
       .catch(() => setGithubOauthConfigured(false));
@@ -56,7 +56,7 @@ export default function ContextPanel() {
           </div>
           <div>
             <h1 className="font-bold text-xl tracking-tight text-foreground">TacticDev</h1>
-            <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] -mt-1">Gen Intel</p>
+            <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] -mt-1">GenTel™</p>
           </div>
         </div>
         <div className="flex items-center justify-between mb-2">

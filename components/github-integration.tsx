@@ -15,7 +15,7 @@ export default function GithubIntegrationPanel() {
   const [oauthConfigured, setOauthConfigured] = useState<boolean>(false);
 
   useEffect(() => {
-    fetch("/api/github/status")
+    fetch("/api/oauth/github/status")
       .then((r) => r.json())
       .then((d) => {
         setConnected(Boolean(d.connected));
@@ -32,7 +32,7 @@ export default function GithubIntegrationPanel() {
       {!connected ? (
         <div className="space-y-2">
           {oauthConfigured ? (
-            <a href="/api/github/auth" onClick={() => useToolsStore.getState().setGithubEnabled(true)}>
+            <a href="/api/oauth/github/auth" onClick={() => useToolsStore.getState().setGithubEnabled(true)}>
               <Button className="w-full flex items-center gap-2">
                 <Github size={16} />
                 Connect GitHub

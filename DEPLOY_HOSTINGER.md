@@ -1,4 +1,4 @@
-# Deploying TacticDev Gen Intel to Hostinger (Node.js)
+# Deploying TacticDev GenTel™ to Hostinger (Node.js)
 
 Follow these steps to deploy the app to Hostinger using the Node.js app option.
 
@@ -21,23 +21,27 @@ Follow these steps to deploy the app to Hostinger using the Node.js app option.
    - App startup file: `.next/standalone/server.js`
 
 4. Environment variables (add these in Hostinger UI):
-   - NEXT_PUBLIC_APP_NAME = TacticDev Gen Intel
+   - NEXT_PUBLIC_APP_NAME = TacticDev GenTel™
    - NEXT_PUBLIC_SITE_ORIGIN = https://gen.tacticdev.com
    - OPENAI_API_KEY = <your-openai-api-key>
    - RESPONSES_MODEL = gpt-5.2
    - RESPONSES_DEVELOPER_PROMPT = <optional prompt override>
-   - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-   - GOOGLE_REDIRECT_URI = https://gen.tacticdev.com/api/google/callback
    - GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
-   - GITHUB_REDIRECT_URI = https://gen.tacticdev.com/api/github/callback
+   - GITHUB_REDIRECT_URI = https://gen.tacticdev.com/api/oauth/github/callback
+   - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+   - GOOGLE_REDIRECT_URI = https://gen.tacticdev.com/api/oauth/google/callback
+   - OAUTH_STATE_SECRET = <long-random-string>
+   - OAUTH_RETURN_ALLOWLIST = https://gen.tacticdev.com,https://teal-wasp-987766.hostingersite.com
    - DEFAULT_VECTOR_STORE_ID / DEFAULT_VECTOR_STORE_NAME (optional)
    - ADMIN_PASSWORD (required for admin endpoints)
 
 5. GitHub / Google OAuth settings:
    - For GitHub App, set Authorization callback URL(s):
-     - https://<hostinger-temp-domain>/api/github/callback
-     - https://gen.tacticdev.com/api/github/callback
-   - For Google OAuth, set authorized redirect URIs similarly.
+     - https://teal-wasp-987766.hostingersite.com/api/oauth/github/callback
+     - https://gen.tacticdev.com/api/oauth/github/callback
+   - For Google OAuth, set authorized redirect URIs similarly:
+     - https://teal-wasp-987766.hostingersite.com/api/oauth/google/callback
+     - https://gen.tacticdev.com/api/oauth/google/callback
 
 6. DNS & domain:
    - Add the subdomain `gen.tacticdev.com` in Hostinger Domains > Subdomains.
