@@ -1,9 +1,16 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI();
+import { getOpenAIClient } from "@/lib/openai";
 
 export async function POST(request: Request) {
   const { vectorStoreId, fileId } = await request.json();
+  const openai = getOpenAIClient();
+
+  if (!openai) {
+    return new Response(
+      JSON.stringify({ error: "OPENAI_API_KEY is not configured" }),
+      { status: 500 }
+    );
+  }
+
   try {
     const vectorStore = await openai.vectorStores.files.create(
       vectorStoreId,

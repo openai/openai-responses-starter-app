@@ -1,6 +1,6 @@
 import { getDeveloperPrompt, MODEL } from "@/config/constants";
 import { getTools } from "@/lib/tools/tools";
-import OpenAI from "openai";
+import { getOpenAIClient } from "@/lib/openai";
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,14 @@ export async function POST(request: Request) {
 
     console.log("Received messages:", messages);
 
-    const openai = new OpenAI();
+    const openai = getOpenAIClient();
+
+    if (!openai) {
+      return new Response(
+        JSON.stringify({ error: "OPENAI_API_KEY is not configured" }),
+        { status: 500 }
+      );
+    }
 
     const events = await openai.responses.create({
       model: MODEL,
