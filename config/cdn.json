@@ -1,0 +1,7 @@
+{
+  "baseUrl": "",
+  "host": "",
+  "signingEnabled": false,
+  "signingSecret": "",
+  "defaultTTL": 3600
+}

@@ -1,10 +1,10 @@
-# Responses starter app
+# TacticDev Gen Intel
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![NextJS](https://img.shields.io/badge/Built_with-NextJS-blue)
-![OpenAI API](https://img.shields.io/badge/Powered_by-OpenAI_API-orange)
+![Responses API](https://img.shields.io/badge/Powered_by-Responses_API-orange)
 
-This repository contains a NextJS starter app built on top of the [Responses API](https://platform.openai.com/docs/api-reference/responses).
+This repository contains **TacticDev Gen Intel**, a Next.js application built on top of the Responses API that provides an internal generative assistant tailored for developer workflows.
 It leverages built-in tools ([web search](https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses) and [file search](https://platform.openai.com/docs/guides/tools-file-search)) and implements a chat interface with multi-turn conversation handling.
 
 Features:
@@ -41,7 +41,7 @@ This app is meant to be used as a starting point to build a conversational assis
 3. **Clone the Repository:**
 
    ```bash
-   git clone https://github.com/openai/openai-responses-starter-app.git
+   git clone https://github.com/<your-org>/tacticdev-gen-intel.git
    ```
 
 4. **Install dependencies:**
@@ -121,7 +121,24 @@ Learn more about the available 1P connectors in [our documentation](https://plat
    GOOGLE_REDIRECT_URI="http://localhost:3000/api/google/callback"
    ```
 
+   Additional optional env vars for customizing the assistant (helpful for internal knowledge / heavy-lift assistants):
+
+   - `RESPONSES_MODEL` — set the Responses model to use (defaults to `gpt-5.2`).
+   - `RESPONSES_DEVELOPER_PROMPT` — override the developer prompt to tune the assistant's voice/behavior.
+   - `DEFAULT_VECTOR_STORE_ID` / `DEFAULT_VECTOR_STORE_NAME` — specify a vector store to pre-select for file search (useful to surface internal docs by default).
+
+   Example for internal use:
+   ```bash
+   RESPONSES_MODEL="gpt-5.2"
+   RESPONSES_DEVELOPER_PROMPT="You are an internal knowledge assistant. Prioritize company docs and cite sources. Keep answers actionable and include next steps."
+   DEFAULT_VECTOR_STORE_ID="your-vector-store-id"
+   ```
 ## Demo flows
+
+### UI: Core Knowledge Base & Midnight theme
+
+- The `File Search` panel has been renamed to **Core Knowledge Base** and includes clearer helper text and controls to link an existing vector store or upload documents that will populate your organization's vector store.
+- A new **Midnight (TacticDev)** theme is available in the header tools: choose between Auto, Dark, or Midnight to enable a deep, TacticDev-styled dark mode with teal brand accents.
 
 ### Try web search + code interpreter
 

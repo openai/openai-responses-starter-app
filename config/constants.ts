@@ -1,7 +1,10 @@
-export const MODEL = "gpt-5.2";
+export const MODEL = process.env.RESPONSES_MODEL ?? "gpt-5.2";
 
-// Developer prompt for the assistant
-export const DEVELOPER_PROMPT = `
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "TacticDev Gen Intel";
+export const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://gen.tacticdev.com";
+
+// Default developer prompt for the assistant (can be overridden via RESPONSES_DEVELOPER_PROMPT env var)
+export const DEFAULT_DEVELOPER_PROMPT = `
 You are a helpful assistant helping users with their queries.
 
 Response style:
@@ -30,18 +33,21 @@ export function getDeveloperPrompt(): string {
   const monthName = now.toLocaleDateString("en-US", { month: "long" });
   const year = now.getFullYear();
   const dayOfMonth = now.getDate();
-  return `${DEVELOPER_PROMPT.trim()}\n\nToday is ${dayName}, ${monthName} ${dayOfMonth}, ${year}.`;
+  const envPrompt = process.env.RESPONSES_DEVELOPER_PROMPT?.trim();
+  const basePrompt = envPrompt && envPrompt.length > 0 ? envPrompt : DEFAULT_DEVELOPER_PROMPT;
+  return `${basePrompt.trim()}\n\nToday is ${dayName}, ${monthName} ${dayOfMonth}, ${year}.`;
 }
 
 // Here is the context that you have available to you:
 // ${context}
 
 // Initial message that will be displayed in the chat
-export const INITIAL_MESSAGE = `
-Hi, how can I help you?
-`;
+export const INITIAL_MESSAGE = `How can I assist you today?`;
+
+export const DEFAULT_VECTOR_STORE_ID = process.env.DEFAULT_VECTOR_STORE_ID ?? "";
+export const DEFAULT_VECTOR_STORE_NAME = process.env.DEFAULT_VECTOR_STORE_NAME ?? "Example";
 
 export const defaultVectorStore = {
-  id: "",
-  name: "Example",
+  id: DEFAULT_VECTOR_STORE_ID,
+  name: DEFAULT_VECTOR_STORE_NAME,
 };

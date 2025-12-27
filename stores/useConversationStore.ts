@@ -21,13 +21,7 @@ interface ConversationState {
 }
 
 const useConversationStore = create<ConversationState>((set) => ({
-  chatMessages: [
-    {
-      type: "message",
-      role: "assistant",
-      content: [{ type: "output_text", text: INITIAL_MESSAGE }],
-    },
-  ],
+  chatMessages: [],
   conversationItems: [],
   isAssistantLoading: false,
   setChatMessages: (items) => set({ chatMessages: items }),
@@ -42,13 +36,7 @@ const useConversationStore = create<ConversationState>((set) => ({
   rawSet: set,
   resetConversation: () =>
     set(() => ({
-      chatMessages: [
-        {
-          type: "message",
-          role: "assistant",
-          content: [{ type: "output_text", text: INITIAL_MESSAGE }],
-        },
-      ],
+      chatMessages: [],
       conversationItems: [],
     })),
 }));

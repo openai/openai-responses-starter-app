@@ -40,6 +40,7 @@ export interface ToolsState {
   mcpEnabled: boolean;
   mcpConfig: McpConfig;
   googleIntegrationEnabled: boolean;
+  githubEnabled: boolean;
 }
 
 interface StoreState {
@@ -53,6 +54,8 @@ interface StoreState {
   setFunctionsEnabled: (enabled: boolean) => void;
   googleIntegrationEnabled: boolean;
   setGoogleIntegrationEnabled: (enabled: boolean) => void;
+  githubEnabled: boolean;
+  setGithubEnabled: (enabled: boolean) => void;
   codeInterpreterEnabled: boolean;
   setCodeInterpreterEnabled: (enabled: boolean) => void;
   vectorStore: VectorStore | null;
@@ -100,6 +103,10 @@ const useToolsStore = create<StoreState>()(
       googleIntegrationEnabled: false,
       setGoogleIntegrationEnabled: (enabled) => {
         set({ googleIntegrationEnabled: enabled });
+      },
+      githubEnabled: false,
+      setGithubEnabled: (enabled) => {
+        set({ githubEnabled: enabled });
       },
       mcpEnabled: false,
       setMcpEnabled: (enabled) => {

@@ -13,11 +13,67 @@ export const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly", // Read access to Gmail
 ];
 
+export const GITHUB_SCOPES = [
+  "repo",
+  "user",
+  "workflow",
+];
+
 export type FreshTokens = {
   accessToken?: string;
   refreshToken?: string;
   expiresAt?: number;
 };
+
+let cachedGithubConfig: Configuration | null = null;
+
+export async function getGithubClient(): Promise<Configuration> {
+  if (cachedGithubConfig) return cachedGithubConfig;
+
+  const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET } = process.env as Record<
+    string,
+    string | undefined
+  >;
+
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    throw new Error(
+      "Missing GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET environment variables"
+    );
+  }
+
+  cachedGithubConfig = new Configuration(
+    {
+      issuer: "https://github.com",
+      authorization_endpoint: "https://github.com/login/oauth/authorize",
+      token_endpoint: "https://github.com/login/oauth/access_token",
+      userinfo_endpoint: "https://api.github.com/user",
+    },
+    GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET
+  );
+
+  return cachedGithubConfig;
+}
+
+export function getGithubRedirectUri(host?: string): string {
+  const { GITHUB_REDIRECT_URI } = process.env as Record<
+    string,
+    string | undefined
+  >;
+  if (GITHUB_REDIRECT_URI && !GITHUB_REDIRECT_URI.includes("localhost")) {
+    return GITHUB_REDIRECT_URI;
+  }
+  if (host) {
+    const protocol = host.includes("localhost") ? "http" : "https";
+    return `${protocol}://${host}/api/github/callback`;
+  }
+  return GITHUB_REDIRECT_URI || "http://localhost:3000/api/github/callback";
+}
+
+export async function getGithubAccessToken(): Promise<string | undefined> {
+  const jar = await cookies();
+  return jar.get("gh_access_token")?.value;
+}
 
 export async function getGoogleClient(): Promise<Configuration> {
   if (cachedConfig) return cachedConfig;
@@ -43,11 +99,18 @@ export async function getGoogleClient(): Promise<Configuration> {
   return cachedConfig;
 }
 
-export function getRedirectUri(): string {
+export function getRedirectUri(host?: string): string {
   const { GOOGLE_REDIRECT_URI } = process.env as Record<
     string,
     string | undefined
   >;
+  if (GOOGLE_REDIRECT_URI && !GOOGLE_REDIRECT_URI.includes("localhost")) {
+    return GOOGLE_REDIRECT_URI;
+  }
+  if (host) {
+    const protocol = host.includes("localhost") ? "http" : "https";
+    return `${protocol}://${host}/api/google/callback`;
+  }
   return GOOGLE_REDIRECT_URI || "http://localhost:3000/api/google/callback";
 }
 

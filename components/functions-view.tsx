@@ -18,8 +18,8 @@ const getToolArgs = (parameters: {
     <div className="ml-4">
       {Object.entries(parameters).map(([key, value]) => (
         <div key={key} className="flex items-center text-xs space-x-2 my-1">
-          <span className="text-blue-500">{key}:</span>
-          <span className="text-zinc-400">{value?.type}</span>
+          <span className="text-primary font-medium">{key}:</span>
+          <span className="text-muted-foreground">{value?.type}</span>
         </div>
       ))}
     </div>
@@ -31,10 +31,10 @@ export default function FunctionsView() {
     <div className="flex flex-col space-y-4">
       {toolsList.map((tool) => (
         <div key={tool.name} className="flex items-start gap-2">
-          <div className="bg-blue-100 text-blue-500 rounded-md p-1">
+          <div className="bg-primary/10 text-primary rounded-md p-1">
             <Code size={16} />
           </div>
-          <div className="text-zinc-800 font-mono text-sm mt-0.5">
+          <div className="text-foreground font-mono text-sm mt-0.5">
             {tool.name}(
             {tool.parameters && Object.keys(tool.parameters).length > 0
               ? getToolArgs(tool.parameters)

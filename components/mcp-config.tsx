@@ -19,15 +19,15 @@ export default function McpConfig() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div className="text-zinc-600 text-sm">Server details</div>
+        <div className="text-muted-foreground text-sm">Server details</div>
         <div
-          className="text-zinc-400 text-sm px-1 transition-colors hover:text-zinc-600 cursor-pointer"
+          className="text-muted-foreground text-sm px-1 transition-colors hover:text-foreground cursor-pointer"
           onClick={handleClear}
         >
           Clear
         </div>
       </div>
-      <div className="mt-3 space-y-3 text-zinc-400">
+      <div className="mt-3 space-y-3 text-muted-foreground">
         <div className="flex items-center gap-2">
           <label htmlFor="server_label" className="text-sm w-24">
             Label
@@ -36,7 +36,7 @@ export default function McpConfig() {
             id="server_label"
             type="text"
             placeholder="deepwiki"
-            className="bg-white border text-sm flex-1 text-zinc-900 placeholder:text-zinc-400"
+            className="bg-background border-border text-sm flex-1 text-foreground placeholder:text-muted-foreground"
             value={mcpConfig.server_label}
             onChange={(e) =>
               setMcpConfig({ ...mcpConfig, server_label: e.target.value })
@@ -51,7 +51,7 @@ export default function McpConfig() {
             id="server_url"
             type="text"
             placeholder="https://example.com/mcp"
-            className="bg-white border text-sm flex-1 text-zinc-900 placeholder:text-zinc-400"
+            className="bg-background border-border text-sm flex-1 text-foreground placeholder:text-muted-foreground"
             value={mcpConfig.server_url}
             onChange={(e) =>
               setMcpConfig({ ...mcpConfig, server_url: e.target.value })
@@ -66,7 +66,7 @@ export default function McpConfig() {
             id="allowed_tools"
             type="text"
             placeholder="tool1,tool2"
-            className="bg-white border text-sm flex-1 text-zinc-900 placeholder:text-zinc-400"
+            className="bg-background border-border text-sm flex-1 text-foreground placeholder:text-muted-foreground"
             value={mcpConfig.allowed_tools}
             onChange={(e) =>
               setMcpConfig({ ...mcpConfig, allowed_tools: e.target.value })

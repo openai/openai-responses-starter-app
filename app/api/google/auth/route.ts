@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import {
   randomPKCECodeVerifier,
   calculatePKCECodeChallenge,
@@ -19,6 +19,7 @@ const VERIFIER_COOKIE = "gc_oauth_verifier";
 export async function GET() {
   const config = await getGoogleClient();
   const jar = await cookies();
+  const host = (await headers()).get("host") || undefined;
 
   // Ensure we have a session id cookie set
   await getOrCreateSessionId();
@@ -39,7 +40,7 @@ export async function GET() {
   jar.set(STATE_COOKIE, state, cookieOptions);
   jar.set(VERIFIER_COOKIE, codeVerifier, cookieOptions);
 
-  const redirectUri = getRedirectUri();
+  const redirectUri = getRedirectUri(host);
 
   const authorizationUrl = buildAuthorizationUrl(config, {
     redirect_uri: redirectUri,
