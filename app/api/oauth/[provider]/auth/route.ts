@@ -7,6 +7,7 @@ import {
   generateCodeChallenge, 
   generateNonce 
 } from "@/lib/oauth";
+import { logRequest, logError } from "@/lib/logger";
 
 export async function GET(
   request: NextRequest,
@@ -17,6 +18,12 @@ export async function GET(
   
   try {
     const cfg = getProviderConfig(provider, host);
+    await logRequest("info", `OAuth Start: Config (${provider})`, { 
+      clientId: cfg.clientId ? `${cfg.clientId.substring(0, 5)}...` : "missing",
+      redirectUri: cfg.redirectUri,
+      host
+    });
+
     const jar = await cookies();
 
     const searchParams = request.nextUrl.searchParams;
@@ -27,6 +34,7 @@ export async function GET(
       // If it's a dev environment, we might be more lenient or check against a specific list
       const isDev = host.includes("localhost") || host.includes("github.dev") || host.includes("hostingersite.com");
       if (!isDev) {
+        await logRequest("warn", `OAuth Start: Invalid return_to (${provider})`, { return_to, host });
         return NextResponse.json({ error: "Invalid return_to URL" }, { status: 400 });
       }
     }

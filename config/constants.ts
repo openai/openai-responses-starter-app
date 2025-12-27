@@ -1,7 +1,7 @@
 export const MODEL = process.env.RESPONSES_MODEL ?? "gpt-5.2";
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "TacticDev GenTel™";
-export const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://gen.tacticdev.com";
+export const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_ORIGIN || "https://gentel.tacticdev.com";
 
 // Default developer prompt for the assistant (can be overridden via RESPONSES_DEVELOPER_PROMPT env var)
 export const DEFAULT_DEVELOPER_PROMPT = `

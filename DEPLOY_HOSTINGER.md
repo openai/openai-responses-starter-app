@@ -22,29 +22,29 @@ Follow these steps to deploy the app to Hostinger using the Node.js app option.
 
 4. Environment variables (add these in Hostinger UI):
    - NEXT_PUBLIC_APP_NAME = TacticDev GenTel™
-   - NEXT_PUBLIC_SITE_ORIGIN = https://gen.tacticdev.com
+   - NEXT_PUBLIC_SITE_ORIGIN = https://gentel.tacticdev.com
    - OPENAI_API_KEY = <your-openai-api-key>
    - RESPONSES_MODEL = gpt-5.2
    - RESPONSES_DEVELOPER_PROMPT = <optional prompt override>
    - GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
-   - GITHUB_REDIRECT_URI = https://gen.tacticdev.com/api/oauth/github/callback
+   - GITHUB_REDIRECT_URI = https://gentel.tacticdev.com/api/oauth/github/callback
    - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-   - GOOGLE_REDIRECT_URI = https://gen.tacticdev.com/api/oauth/google/callback
+   - GOOGLE_REDIRECT_URI = https://gentel.tacticdev.com/api/oauth/google/callback
    - OAUTH_STATE_SECRET = <long-random-string>
-   - OAUTH_RETURN_ALLOWLIST = https://gen.tacticdev.com,https://teal-wasp-987766.hostingersite.com
+   - OAUTH_RETURN_ALLOWLIST = https://gentel.tacticdev.com,https://teal-wasp-987766.hostingersite.com
    - DEFAULT_VECTOR_STORE_ID / DEFAULT_VECTOR_STORE_NAME (optional)
    - ADMIN_PASSWORD (required for admin endpoints)
 
 5. GitHub / Google OAuth settings:
    - For GitHub App, set Authorization callback URL(s):
      - https://teal-wasp-987766.hostingersite.com/api/oauth/github/callback
-     - https://gen.tacticdev.com/api/oauth/github/callback
+     - https://gentel.tacticdev.com/api/oauth/github/callback
    - For Google OAuth, set authorized redirect URIs similarly:
      - https://teal-wasp-987766.hostingersite.com/api/oauth/google/callback
-     - https://gen.tacticdev.com/api/oauth/google/callback
+     - https://gentel.tacticdev.com/api/oauth/google/callback
 
 6. DNS & domain:
-   - Add the subdomain `gen.tacticdev.com` in Hostinger Domains > Subdomains.
+   - Add the subdomain `gentel.tacticdev.com` in Hostinger Domains > Subdomains.
    - Follow Hostinger documentation to point DNS to their servers (CNAME or A record) and add the custom domain to your Hostinger app.
    - Wait for DNS propagation.
 
@@ -55,7 +55,7 @@ Follow these steps to deploy the app to Hostinger using the Node.js app option.
 8. Post-deploy checks:
    - Visit the temporary domain first to confirm the app loads.
    - Click Connect GitHub and confirm OAuth succeeds (if not, copy the exact redirect URL from the browser error and add it to your GitHub OAuth app).
-   - Visit https://gen.tacticdev.com once DNS is live.
+   - Visit https://gentel.tacticdev.com once DNS is live.
 
 9. Security best practices:
    - Never commit production secrets to the repo. Use Hostinger's env var UI instead.

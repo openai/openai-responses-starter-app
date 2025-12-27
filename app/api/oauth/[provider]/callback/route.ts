@@ -5,6 +5,7 @@ import {
   verifyState 
 } from "@/lib/oauth";
 import { getSessionId, saveTokenSet, OAuthTokens } from "@/lib/session";
+import { logRequest, logError } from "@/lib/logger";
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
   const error = searchParams.get("error");
 
   if (error) {
-    console.error(`OAuth Callback Error (${provider}):`, error);
+    await logRequest("error", `OAuth Callback Error (${provider})`, { error });
     return NextResponse.redirect(new URL(`/?error=${error}`, request.url));
   }
 
@@ -28,21 +29,30 @@ export async function GET(
   jar.delete("oauth_state");
 
   if (!returnedState || !cookieState || returnedState !== cookieState) {
+    await logRequest("warn", `OAuth Callback: Invalid State (${provider})`, { returnedState, cookieState });
     return NextResponse.redirect(new URL("/?error=invalid_state", request.url));
   }
 
   const payload = verifyState(returnedState);
   if (!payload) {
+    await logRequest("warn", `OAuth Callback: Invalid Signature (${provider})`);
     return NextResponse.redirect(new URL("/?error=invalid_signature", request.url));
   }
 
   const sessionId = await getSessionId();
   if (!sessionId) {
+    await logRequest("warn", `OAuth Callback: No Session (${provider})`);
     return NextResponse.redirect(new URL("/?error=no_session", request.url));
   }
 
   try {
     const cfg = getProviderConfig(provider, host);
+    await logRequest("info", `OAuth Callback: Config (${provider})`, { 
+      clientId: cfg.clientId ? `${cfg.clientId.substring(0, 5)}...` : "missing",
+      redirectUri: cfg.redirectUri,
+      host
+    });
+
     const verifier = jar.get("oauth_pkce_verifier")?.value;
     jar.delete("oauth_pkce_verifier");
 
@@ -72,10 +82,16 @@ export async function GET(
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
+      await logRequest("error", `OAuth Callback: Token Exchange Failed (${provider})`, { status: tokenResponse.status, errorData });
       throw new Error(`Token exchange failed: ${errorData}`);
     }
 
     const data = await tokenResponse.json();
+    await logRequest("info", `OAuth Callback: Token Exchange Success (${provider})`, { 
+      hasAccessToken: !!data.access_token,
+      hasRefreshToken: !!data.refresh_token,
+      scope: data.scope
+    });
     
     const now = Date.now();
     const tokens: OAuthTokens = {
