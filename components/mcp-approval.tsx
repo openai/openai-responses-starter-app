@@ -19,10 +19,10 @@ export default function McpApproval({ item, onRespond }: Props) {
   return (
     <div className="flex flex-col">
       <div className="flex">
-        <div className="mr-4 rounded-[16px] p-4 md:mr-24 text-black bg-gray-100 font-light">
+        <div className="mr-4 rounded-[16px] p-4 md:mr-24 text-foreground bg-muted font-light border border-border">
           <div className="mb-2 text-sm">
             Request to execute tool{" "}
-            <span className="font-medium">{item.name}</span> on server{" "}
+            <span className="font-medium text-primary">{item.name}</span> on server{" "}
             <span className="font-medium">{item.server_label}</span>.
           </div>
           <div className="flex gap-2">
@@ -31,9 +31,9 @@ export default function McpApproval({ item, onRespond }: Props) {
             </Button>
             <Button
               size="sm"
+              variant="outline"
               disabled={disabled}
               onClick={() => handle(false)}
-              className="bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-800"
             >
               Decline
             </Button>

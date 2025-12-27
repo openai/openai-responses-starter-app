@@ -12,9 +12,18 @@ export async function GET(request: Request) {
     const url = containerId
       ? `https://api.openai.com/v1/containers/${containerId}/files/${fileId}/content`
       : `https://api.openai.com/v1/container-files/${fileId}/content`;
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: "OPENAI_API_KEY is not configured" }),
+        { status: 500 }
+      );
+    }
+
     const res = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
     });
     if (!res.ok) throw new Error(`Failed to fetch file: ${res.status}`);

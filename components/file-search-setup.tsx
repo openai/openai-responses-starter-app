@@ -35,18 +35,17 @@ export default function FileSearchSetup() {
 
   return (
     <div>
-      <div className="text-sm text-zinc-500">
-        Upload a file to create a new vector store, or use an existing one.
+      <div className="text-sm text-muted-foreground">
+        Upload files to create a Core Knowledge Base, or link an existing vector
+        store. The assistant will prioritize this source for internal answers.
       </div>
-      <div className="flex items-center gap-2 mt-2 h-10">
-        <div className="flex items-center gap-2 w-full">
-          <div className="text-sm font-medium w-24 text-nowrap">
-            Vector store
-          </div>
+      <div className="flex items-center gap-2 mt-2 h-12">
+        <div className="flex items-center gap-4 w-full">
+          <div className="text-sm font-medium w-36">Vector store (Core KB)</div>
           {vectorStore?.id ? (
             <div className="flex items-center justify-between flex-1 min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="text-zinc-400  text-xs font-mono flex-1 text-ellipsis truncate">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="text-xs font-mono flex-1 text-ellipsis truncate text-muted-foreground">
                   {vectorStore.id}
                 </div>
                 <TooltipProvider>
@@ -55,7 +54,7 @@ export default function FileSearchSetup() {
                       <CircleX
                         onClick={() => unlinkStore()}
                         size={16}
-                        className="cursor-pointer text-zinc-400 mb-0.5 shrink-0 mt-0.5 hover:text-zinc-700 transition-all"
+                        className="cursor-pointer text-muted-foreground hover:text-destructive transition-all"
                       />
                     </TooltipTrigger>
                     <TooltipContent className="mr-2">
@@ -72,19 +71,19 @@ export default function FileSearchSetup() {
                 placeholder="ID (vs_XXXX...)"
                 value={newStoreId}
                 onChange={(e) => setNewStoreId(e.target.value)}
-                className="border border-zinc-300 rounded text-sm bg-white"
+                className="rounded text-sm bg-input border border-border"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleAddStore(newStoreId);
                   }
                 }}
               />
-              <div
-                className="text-zinc-400 text-sm px-1 transition-colors hover:text-zinc-600 cursor-pointer"
+              <button
+                className="text-sm bg-primary text-primary-foreground px-3 py-1 rounded-md hover:opacity-90 transition"
                 onClick={() => handleAddStore(newStoreId)}
               >
-                Add
-              </div>
+                Link
+              </button>
             </div>
           )}
         </div>
