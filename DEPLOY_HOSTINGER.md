@@ -61,7 +61,15 @@ Follow these steps to deploy the app to Hostinger using the Node.js app option.
    - Never commit production secrets to the repo. Use Hostinger's env var UI instead.
    - Add `.env` to `.gitignore` (this repo already ignores `.env*` but has `.env` in history—remove it from repo history if needed).
 
-If you want, I can:
-- Prepare the exact env var values text you can paste into Hostinger UI, or
-- Remove `.env` from the Git history (git filter-repo or BFG) if you want me to redact secrets from history.
+10. Branded fallback error pages (recommended)
+
+Hostinger and similar providers allow custom error pages that are served when the hosting stack returns HTTP errors (403/404/500) before your Node.js app handles the request. To provide a branded experience during outages or misconfiguration, this repo includes ready-made, branded static error pages located at `public/errors/403.html`, `public/errors/404.html`, and `public/errors/500.html`.
+
+How to use them:
+- In Hostinger hPanel, look for **Advanced → Error Pages** (or similar). For each relevant HTTP status (403, 404, 500), paste the contents of the matching `public/errors/*.html` page or upload the file if the panel allows it. This ensures that when the shared hosting layer or CDN responds with a 403/500/404, visitors see a TacticDev-branded message.
+- After uploading/pasting, test the domain to confirm the custom pages are served as expected.
+
+If you prefer, I can also provide separate unbranded/plain copies suitable for external communication or temporary maintenance pages.
+
+If you want me to push these files and update the repository, say the word and I’ll commit and push them now.
 
