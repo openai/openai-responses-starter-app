@@ -1,14 +1,25 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import ErrorPage from "@/components/error-page";
 
-export default function Error({ reset }: { error: Error; reset: () => void }) {
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log the error to an error reporting service
+    console.error(error);
+  }, [error]);
+
   return (
-    <div>
-      <ErrorPage code={500} title="Server error" message="An unexpected server error occurred." />
-      <div className="flex justify-center mt-4">
-        <button onClick={() => reset()} className="px-4 py-2 rounded-md bg-primary text-primary-foreground">Try again</button>
-      </div>
-    </div>
+    <ErrorPage 
+      code={500} 
+      title="Server error" 
+      message={error.message || "An unexpected server error occurred."} 
+      onReset={reset}
+    />
   );
 }
