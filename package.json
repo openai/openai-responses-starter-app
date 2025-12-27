@@ -6,7 +6,9 @@
   "homepage": "https://gen.tacticdev.com",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm ci",
     "build": "next build",
+    "postbuild": "npm prune --production",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint"

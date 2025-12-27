@@ -13,8 +13,9 @@ Follow these steps to deploy the app to Hostinger using the Node.js app option.
 3. Build & output settings:
    - Build command:
      ```bash
-     npm ci && npm run build && npm prune --production
+     npm run build
      ```
+     Note: this repo includes `prebuild` and `postbuild` scripts so `npm run build` will run `npm ci` before the build and `npm prune --production` after the build. This makes it compatible with providers that only accept a single build command.
    - Output directory: `.next/standalone`
    - Package manager: `npm`
    - App startup file: `.next/standalone/server.js`
