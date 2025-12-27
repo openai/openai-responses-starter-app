@@ -2,7 +2,7 @@
 import React from "react";
 import ErrorPage from "@/components/error-page";
 
-export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+export default function Error({ reset }: { error: Error; reset: () => void }) {
   return (
     <div>
       <ErrorPage code={500} title="Server error" message="An unexpected server error occurred." />

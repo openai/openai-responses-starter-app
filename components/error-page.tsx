@@ -1,5 +1,6 @@
 import React from "react";
 import { Brain } from "lucide-react";
+import Link from "next/link";
 
 type Props = {
   code?: number;
@@ -20,7 +21,7 @@ export default function ErrorPage({ code = 500, title = "Something went wrong", 
         <h1 className="text-xl font-semibold mb-2">{title}</h1>
         <p className="text-muted-foreground mb-6">{message}</p>
         <div className="flex justify-center gap-3">
-          <a href="/" className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium">Go home</a>
+          <Link href="/" className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium">Go home</Link>
         </div>
       </div>
     </div>
